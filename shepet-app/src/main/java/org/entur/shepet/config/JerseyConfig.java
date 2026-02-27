@@ -51,8 +51,6 @@ public class JerseyConfig {
 
     public static final String SERVICES_PATH = "/services";
 
-   public static final String SERVICES_AUTOSYS_PATH = SERVICES_PATH + "/vehicles";
-
     public static final String SERVICES_HEALTH_PATH = "/health";
 
     private static final String PUBLIC_SWAGGER_SCANNER_ID = "public-scanner";
@@ -77,7 +75,7 @@ public class JerseyConfig {
         ServletRegistrationBean publicServicesJersey = new ServletRegistrationBean(new ServletContainer(resourceConfig));
 
 
-        publicServicesJersey.addUrlMappings(SERVICES_AUTOSYS_PATH + "/*");
+        publicServicesJersey.addUrlMappings(SERVICES_PATH + "/*");
         publicServicesJersey.setName("PublicJersey");
 
         publicServicesJersey.setLoadOnStartup(0);

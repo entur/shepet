@@ -1,19 +1,12 @@
 package org.entur.shepet.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDate;
 
+@Getter
+@Setter
 public class Forstegangsregistrering {
-
   private LocalDate registrertForstegangNorgeDato;
-
-  // getters and setters
-  public LocalDate getRegistrertForstegangNorgeDato() {
-    return registrertForstegangNorgeDato;
-  }
-
-  public void setRegistrertForstegangNorgeDato(
-    LocalDate registrertForstegangNorgeDato
-  ) {
-    this.registrertForstegangNorgeDato = registrertForstegangNorgeDato;
-  }
 }

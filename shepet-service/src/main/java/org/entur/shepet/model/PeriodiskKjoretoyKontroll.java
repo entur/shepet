@@ -1,26 +1,13 @@
 package org.entur.shepet.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDate;
 
+@Getter
+@Setter
 public class PeriodiskKjoretoyKontroll {
-
-  private LocalDate kontrollfrist;
+    private LocalDate kontrollfrist;
   private LocalDate sistGodkjent;
-
-  // getters and setters
-  public LocalDate getKontrollfrist() {
-    return kontrollfrist;
-  }
-
-  public void setKontrollfrist(LocalDate kontrollfrist) {
-    this.kontrollfrist = kontrollfrist;
-  }
-
-  public LocalDate getSistGodkjent() {
-    return sistGodkjent;
-  }
-
-  public void setSistGodkjent(LocalDate sistGodkjent) {
-    this.sistGodkjent = sistGodkjent;
-  }
 }

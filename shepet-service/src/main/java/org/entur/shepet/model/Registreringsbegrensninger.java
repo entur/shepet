@@ -1,18 +1,12 @@
 package org.entur.shepet.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 
+@Getter
+@Setter
 public class Registreringsbegrensninger {
-
   private List<Kode> registreringsbegrensning;
-
-  // getters and setters
-
-  public List<Kode> getRegistreringsbegrensning() {
-    return registreringsbegrensning;
-  }
-
-  public void setRegistreringsbegrensning(List<Kode> registreringsbegrensning) {
-    this.registreringsbegrensning = registreringsbegrensning;
-  }
 }
