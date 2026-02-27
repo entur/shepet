@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.entur.shepet</groupId>
+    <artifactId>shepet</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <name>shepet</name>
+    <description>API that exposes SVV Autosys as NeTEx data</description>
+    <packaging>pom</packaging>
+
+
+    <modules>
+        <module>shepet-parent</module>
+        <module>shepet-service</module>
+        <module>shepet-app</module>
+    </modules>
+
+    <licenses>
+        <license>
+            <name>EUPL-1.2 with modifications</name>
+            <url>https://joinup.ec.europa.eu/software/page/eupl</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>Entur AS</name>
+        <url>http://www.entur.org/</url>
+    </organization>
+    <developers>
+        <developer>
+            <name>Gunnar Gudlaugsson</name>
+            <email>gunnar.gudlaugsson@entur.org</email>
+            <organization>Entur</organization>
+            <organizationUrl>https://www.entur.org</organizationUrl>
+        </developer>
+    </developers>
+</project>

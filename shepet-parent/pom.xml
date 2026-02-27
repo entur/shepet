@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.entur.ror</groupId>
+        <artifactId>superpom</artifactId>
+        <version>5.3.0</version>
+        <relativePath/>
+    </parent>
+    <groupId>org.entur.shepet</groupId>
+    <artifactId>shepet-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>shepet-parent</name>
+    <description>API for fetching SVV Autosys data in NeTEx format</description>
+
+    <licenses>
+        <license>
+            <name>EUPL-1.2 with modifications</name>
+            <url>https://joinup.ec.europa.eu/software/page/eupl</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>Entur AS</name>
+        <url>http://www.entur.org/</url>
+    </organization>
+
+    <scm>
+        <connection>scm:git:ssh://git@github.com:entur/shepet.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:entur/shepet.git</developerConnection>
+    </scm>
+
+    <properties>
+        <java.version>21</java.version>
+        <spring-cloud-gcp.version>5.13.5</spring-cloud-gcp.version>
+        <netex-java-model.version>2.0.16-2-SNAPSHOT</netex-java-model.version>
+        <entur.helpers.version>5.50.0</entur.helpers.version>
+        <jts-core.version>1.20.0</jts-core.version>
+        <groovy-all.version>4.0.28</groovy-all.version>
+        <!-- Dependency versions -->
+        <jakarta.version>3.1.0</jakarta.version>
+        <jakarta-validation.version>3.0.2</jakarta-validation.version>
+        <slf4j.version>2.0.9</slf4j.version>
+        <commons-lang3.version>3.14.0</commons-lang3.version>
+        <guava.version>32.1.3-jre</guava.version>
+        <lombok.version>1.18.42</lombok.version>
+        <swagger-jersey2.version>2.2.38</swagger-jersey2.version>
+
+        <!-- Wagon SSH version -->
+        <wagon-ssh-external.version>3.5.3</wagon-ssh-external.version>
+
+        <sobek.version>1.0.1-SNAPSHOT</sobek.version>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>central2</id>
+            <name>Check central first to avoid a lot of not found warnings</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+        <repository>
+            <id>central</id>
+            <url>https://entur2.jfrog.io/entur2/entur-team-rutebanken-snapshot</url>
+        </repository>
+    </repositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Internal modules -->
+            <dependency>
+                <groupId>org.entur.shepet</groupId>
+                <artifactId>shepet-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.rutebanken.sobek</groupId>
+                <artifactId>sobek-common</artifactId>
+                <version>${sobek.version}</version>
+            </dependency>
+
+            <!-- NeTEx Java Model -->
+            <dependency>
+                <groupId>org.entur</groupId>
+                <artifactId>netex-java-model</artifactId>
+                <version>${netex-java-model.version}</version>
+            </dependency>
+
+            <!-- SLF4J -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.entur.ror.helpers</groupId>
+                <artifactId>permission-store-proxy</artifactId>
+                <version>${entur.helpers.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-jaxrs2-jakarta</artifactId>
+                <version>${swagger-jersey2.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+</project>
