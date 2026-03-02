@@ -1,0 +1,87 @@
+name: Build and push
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  maven-verify:
+    env:
+      JFROG_USER: ${{ secrets.ARTIFACTORY_AUTH_USER }}
+      JFROG_PASS: ${{ secrets.ARTIFACTORY_AUTH_TOKEN }}
+      AUTOSYS_API_APIKEY: ${{ secrets.AUTOSYS_API_APIKEY }}
+
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy maven settings
+        run: |
+          wget https://raw.githubusercontent.com/entur/ror-maven-settings/master/.m2/settings.xml -O .github/workflows/settings.xml
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+            ${{ runner.os }}-maven-
+
+      - name: Debug environment variable
+        run: |
+          if [ -z "$AUTOSYS_API_APIKEY" ]; then
+            echo "AUTOSYS_API_APIKEY is not set"
+          else
+            echo "AUTOSYS_API_APIKEY is set (length: ${#AUTOSYS_API_APIKEY})"
+          fi
+      - name: Run maven build
+        run: mvn -q verify -s .github/workflows/settings.xml
+      - uses: actions/upload-artifact@v4.6.2
+        with:
+          path: shepet-app/target/*.jar
+#      - name: Sonar Scan
+#        if: github.repository_owner == 'entur' && github.ref == 'refs/heads/main'
+#        env:
+#          SONAR_TOKEN: ${{ secrets.ENTUR_SONAR_PASSWORD }}
+#          SONAR_PROJECT_NAME: ${{ github.event.repository.name }}
+#          SONAR_PROJECT_KEY: entur_${{ github.event.repository.name }}
+#        run: |
+#          mvn org.jacoco:jacoco-maven-plugin:prepare-agent verify \
+#              org.jacoco:jacoco-maven-plugin:report sonar:sonar \
+#              -Dmaven.main.skip \
+#              -DskipTests \
+#              -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+#              -Dsonar.organization=enturas-github \
+#              -Dsonar.projectName=${SONAR_PROJECT_NAME} \
+#              -Dsonar.host.url=https://sonarcloud.io \
+#              -Dsonar.login=${SONAR_TOKEN}
+  docker-lint:
+    needs: [maven-verify]
+    uses: entur/gha-docker/.github/workflows/lint.yml@v1
+    with:
+      ignore: "DL3018"
+
+  docker-build:
+    if: github.repository_owner == 'entur' && github.event_name == 'push'
+    needs: [maven-verify]
+    uses: entur/gha-docker/.github/workflows/build.yml@v1
+    with:
+      build_artifact_name: artifact
+      build_artifact_path: target
+  docker-push:
+    if: github.repository_owner == 'entur' && github.event_name == 'push'
+    needs: [docker-build]
+    uses: entur/gha-docker/.github/workflows/push.yml@v1
+
+  docker-scan:
+    needs: [ docker-build ]
+    uses: entur/gha-security/.github/workflows/docker-scan.yml@v2
+    with:
+      image_artifact: ${{ needs.docker-build.outputs.image_artifact }}
