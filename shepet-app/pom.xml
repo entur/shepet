@@ -98,7 +98,7 @@
     </dependencies>
 
     <build>
-        <finalName>shepet-app</finalName>
+        <finalName>shepet</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
