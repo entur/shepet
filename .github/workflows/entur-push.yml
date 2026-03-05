@@ -46,22 +46,7 @@ jobs:
       - uses: actions/upload-artifact@v4.6.2
         with:
           path: shepet-app/target/*.jar
-#      - name: Sonar Scan
-#        if: github.repository_owner == 'entur' && github.ref == 'refs/heads/main'
-#        env:
-#          SONAR_TOKEN: ${{ secrets.ENTUR_SONAR_PASSWORD }}
-#          SONAR_PROJECT_NAME: ${{ github.event.repository.name }}
-#          SONAR_PROJECT_KEY: entur_${{ github.event.repository.name }}
-#        run: |
-#          mvn org.jacoco:jacoco-maven-plugin:prepare-agent verify \
-#              org.jacoco:jacoco-maven-plugin:report sonar:sonar \
-#              -Dmaven.main.skip \
-#              -DskipTests \
-#              -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-#              -Dsonar.organization=enturas-github \
-#              -Dsonar.projectName=${SONAR_PROJECT_NAME} \
-#              -Dsonar.host.url=https://sonarcloud.io \
-#              -Dsonar.login=${SONAR_TOKEN}
+
   docker-lint:
     needs: [maven-verify]
     uses: entur/gha-docker/.github/workflows/lint.yml@v1
@@ -85,3 +70,23 @@ jobs:
     uses: entur/gha-security/.github/workflows/docker-scan.yml@v2
     with:
       image_artifact: ${{ needs.docker-build.outputs.image_artifact }}
+
+  trigger-downstream-ci:
+    if: github.repository_owner == 'entur' && github.event_name == 'push'
+    needs: [docker-push]
+    runs-on: ubuntu-latest
+    steps:
+        - name: Trigger downstream CI
+          run: |
+            repo_owner="entur"
+            repo_name="shepet-deployment-config"
+            event_type="trigger-downstream-ci"
+            service="shepet"
+            image_name=${{ needs.docker-push.outputs.image_name }}
+            image_tag=${{ needs.docker-push.outputs.image_tag }} 
+            echo "Triggering downstream CI for $service with version ${{ env.GHA_DOCKER_PUSH_IMAGE_TAG }}"
+            curl -X POST \
+            -H "Authorization: token ${{ secrets.GITFLOW_PAT }}" \
+            -H "Accept: application/vnd.github.everest-preview+json" \
+            -H "Content-Type: application/json" https://api.github.com/repos/$repo_owner/$repo_name/dispatches \
+            -d "{\"event_type\": \"$event_type\", \"client_payload\": {\"service\": \"$service\", \"image_name\": \"$image_name\", \"image_tag\": \"$image_tag\", \"unit\": false, \"integration\": true}}"
