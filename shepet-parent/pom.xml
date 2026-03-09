@@ -98,7 +98,12 @@
             </dependency>
             <dependency>
                 <groupId>org.entur.ror.helpers</groupId>
-                <artifactId>permission-store-proxy</artifactId>
+                <artifactId>oauth2</artifactId>
+                <version>${entur.helpers.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.entur.ror.helpers</groupId>
+                <artifactId>organisation</artifactId>
                 <version>${entur.helpers.version}</version>
             </dependency>
 
