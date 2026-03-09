@@ -24,7 +24,7 @@ import java.util.List;
 public class OAuth2Config {
 
     @ConditionalOnProperty(
-            value = "sobek.security.role.assignment.extractor",
+            value = "shepet.security.role.assignment.extractor",
             havingValue = "jwt",
             matchIfMissing = true
     )
@@ -38,13 +38,13 @@ public class OAuth2Config {
      *
      */
     @ConditionalOnProperty(
-            value = "sobek.security.role.assignment.extractor",
+            value = "shepet.security.role.assignment.extractor",
             havingValue = "baba"
     )
     @Bean
     public UserInfoExtractor babaUserInfoExtractor(
             WebClient webClient,
-            @Value("${sobek.user.permission.rest.service.url}") String url
+            @Value("${shepet.user.permission.rest.service.url}") String url
     ) {
         return new RemoteBabaUserInfoExtractor(webClient, url);
     }
@@ -54,7 +54,7 @@ public class OAuth2Config {
      *
      */
     @ConditionalOnProperty(
-            value = "sobek.security.role.assignment.extractor",
+            value = "shepet.security.role.assignment.extractor",
             havingValue = "jwt",
             matchIfMissing = true
     )
@@ -68,25 +68,25 @@ public class OAuth2Config {
      *
      */
     @ConditionalOnProperty(
-            value = "sobek.security.role.assignment.extractor",
+            value = "shepet.security.role.assignment.extractor",
             havingValue = "baba"
     )
     @Bean
     public RoleAssignmentExtractor babaRoleAssignmentExtractor(WebClient webClient ,
-                                                               @Value("${sobek.user.permission.rest.service.url}") String url) {
+                                                               @Value("${shepet.user.permission.rest.service.url}") String url) {
         return new RemoteBabaRoleAssignmentExtractor(webClient, url);
     }
 
     @Bean
     @Profile("!test")
     public MultiIssuerAuthenticationManagerResolver multiIssuerAuthenticationManagerResolver(
-            @Value("${sobek.oauth2.resourceserver.auth0.entur.internal.jwt.audience:}")
+            @Value("${shepet.oauth2.resourceserver.auth0.entur.internal.jwt.audience:}")
             String enturInternalAuth0Audiences,
-            @Value("${sobek.oauth2.resourceserver.auth0.entur.internal.jwt.issuer-uri:}")
+            @Value("${shepet.oauth2.resourceserver.auth0.entur.internal.jwt.issuer-uri:}")
             String enturInternalAuth0Issuer,
-            @Value("${sobek.oauth2.resourceserver.auth0.entur.partner.jwt.audience:}")
+            @Value("${shepet.oauth2.resourceserver.auth0.entur.partner.jwt.audience:}")
             String enturPartnerAuth0Audiences,
-            @Value("${sobek.oauth2.resourceserver.auth0.entur.partner.jwt.issuer-uri:}")
+            @Value("${shepet.oauth2.resourceserver.auth0.entur.partner.jwt.issuer-uri:}")
             String enturPartnerAuth0Issuer) {
 
         return new MultiIssuerAuthenticationManagerResolverBuilder()
@@ -116,13 +116,13 @@ public class OAuth2Config {
     @Profile("!test")
     @Bean
     @ConditionalOnProperty(
-            value = "sobek.security.role.assignment.extractor",
+            value = "shepet.security.role.assignment.extractor",
             havingValue = "baba"
     )
     WebClient webClient(
             WebClient.Builder webClientBuilder,
             OAuth2ClientProperties properties,
-            @Value("${sobek.oauth2.client.audience}") String audience
+            @Value("${shepet.oauth2.client.audience}") String audience
     ) {
         return new AuthorizedWebClientBuilder(webClientBuilder)
                 .withOAuth2ClientProperties(properties)
@@ -130,7 +130,7 @@ public class OAuth2Config {
                 .withClientRegistrationId("internal")
                 .build()
                 .mutate()
-                .defaultHeader("Et-Client-Name", "entur-sobek")
+                .defaultHeader("Et-Client-Name", "entur-shepet")
                 .build();
     }
 
