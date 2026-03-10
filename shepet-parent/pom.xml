@@ -40,9 +40,9 @@
         <netex-java-model.version>3.0.0-SNAPSHOT</netex-java-model.version>
         <entur.helpers.version>5.50.0</entur.helpers.version>
         <!-- Dependency versions -->
-        <slf4j.version>2.0.9</slf4j.version>
+        <slf4j.version>2.0.17</slf4j.version>
         <lombok.version>1.18.42</lombok.version>
-        <swagger-jersey2.version>2.2.38</swagger-jersey2.version>
+        <swagger-jersey2.version>2.2.44</swagger-jersey2.version>
 
         <sobek.version>1.0.1-SNAPSHOT</sobek.version>
     </properties>
