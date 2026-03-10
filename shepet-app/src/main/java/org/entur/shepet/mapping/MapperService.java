@@ -290,8 +290,10 @@ public class MapperService {
         if (tekniskGodkjenning.getTekniskeData() == null) return vehicleType;
         var tekniskeData = tekniskGodkjenning.getTekniskeData();
 
-        var passengerCapacityStructure = mapPassengerCapacity(vt, index, tekniskeData.getPersontall());
-        if (passengerCapacityStructure != null) vehicleType.withPassengerCapacity(passengerCapacityStructure);
+        if(tekniskeData.getPersontall() != null) {
+            var passengerCapacityStructure = mapPassengerCapacity(vt, index, tekniskeData.getPersontall());
+            if (passengerCapacityStructure != null) vehicleType.withPassengerCapacity(passengerCapacityStructure);
+        }
 
         var vekter = tekniskeData.getVekter();
         if(vekter != null && vekter.getEgenvekt() != null) {
