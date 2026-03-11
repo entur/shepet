@@ -45,11 +45,11 @@
         <!-- Dependency versions -->
         <jakarta.version>3.1.0</jakarta.version>
         <jakarta-validation.version>3.0.2</jakarta-validation.version>
-        <slf4j.version>2.0.9</slf4j.version>
+        <slf4j.version>2.0.17</slf4j.version>
         <commons-lang3.version>3.14.0</commons-lang3.version>
         <guava.version>32.1.3-jre</guava.version>
         <lombok.version>1.18.42</lombok.version>
-        <swagger-jersey2.version>2.2.38</swagger-jersey2.version>
+        <swagger-jersey2.version>2.2.45</swagger-jersey2.version>
 
         <!-- Wagon SSH version -->
         <wagon-ssh-external.version>3.5.3</wagon-ssh-external.version>
