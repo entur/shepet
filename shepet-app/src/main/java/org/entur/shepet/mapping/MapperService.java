@@ -183,6 +183,18 @@ public class MapperService {
         return String.format("AUTOSYS:VehicleType:%s", efTypegodkjenning.getTypegodkjenningNrTekst());
     }
 
+    private String passengerCapacityId(Kjoretoydata vt, int index) {
+        if (vt.getGodkjenning() == null) return String.format("AUTOSYS:PassengerCapacity:%d", index);
+        var godkjenning = vt.getGodkjenning();
+        if (godkjenning.getTekniskGodkjenning() == null) return String.format("AUTOSYS:PassengerCapacity:%d", index);
+        var tekniskGodkjenning = godkjenning.getTekniskGodkjenning();
+        if (tekniskGodkjenning.getKjoretoyklassifisering() == null) return String.format("AUTOSYS:PassengerCapacity:%d", index);
+        var kjoretoyklassifisering = tekniskGodkjenning.getKjoretoyklassifisering();
+        if (kjoretoyklassifisering.getEfTypegodkjenning() == null) return String.format("AUTOSYS:PassengerCapacity:%d", index);
+        var efTypegodkjenning = kjoretoyklassifisering.getEfTypegodkjenning();
+        if (efTypegodkjenning.getTypegodkjenningNrTekst() == null) return String.format("AUTOSYS:PassengerCapacity:%d", index);
+        return String.format("AUTOSYS:PassengerCapacity:%s", efTypegodkjenning.getTypegodkjenningNrTekst());
+    }
     private String modelDescription(Kjoretoydata vt) {
         if (vt.getGodkjenning() == null) return "";
         var godkjenning = vt.getGodkjenning();
@@ -278,8 +290,10 @@ public class MapperService {
         if (tekniskGodkjenning.getTekniskeData() == null) return vehicleType;
         var tekniskeData = tekniskGodkjenning.getTekniskeData();
 
-        var passengerCapacityStructure = mapPassengerCapacity(tekniskeData.getPersontall());
-        if (passengerCapacityStructure != null) vehicleType.withPassengerCapacity(passengerCapacityStructure);
+        if(tekniskeData.getPersontall() != null) {
+            var passengerCapacityStructure = mapPassengerCapacity(vt, index, tekniskeData.getPersontall());
+            if (passengerCapacityStructure != null) vehicleType.withPassengerCapacity(passengerCapacityStructure);
+        }
 
         var vekter = tekniskeData.getVekter();
         if(vekter != null && vekter.getEgenvekt() != null) {
@@ -337,9 +351,11 @@ public class MapperService {
         return vehicleType;
     }
 
-    private PassengerCapacityStructure mapPassengerCapacity(TekniskeData.Persontall pt) {
+    private PassengerCapacityStructure mapPassengerCapacity(Kjoretoydata vt, int index, TekniskeData.Persontall pt) {
         if(pt.getStaplasser() == null && pt.getSitteplasserTotalt() == null) return null;
         PassengerCapacityStructure passengerCapacityStructure = new PassengerCapacityStructure();
+        passengerCapacityStructure.withId(passengerCapacityId(vt, index));
+        passengerCapacityStructure.withVersion("1");
 
         if(pt.getSitteplasserTotalt() != null) passengerCapacityStructure.withSeatingCapacity(BigInteger.valueOf(pt.getSitteplasserTotalt()));
         if(pt.getStaplasser() != null) passengerCapacityStructure.withStandingCapacity(BigInteger.valueOf((pt.getStaplasser())));
