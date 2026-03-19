@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.entur.shepet.model.Kjoretoydata;
 import org.entur.shepet.model.Kode;
@@ -43,36 +42,31 @@ public class MapperService {
         final CompositeFrame netexCompositeFrame = sobekComositeFrameExporter.createCompositeFrame("Composite frame ");
         final ResourceFrame netexResourceFrame = sobekResourceFrameExporter.createResourceFrame("Resource frame ");
 
-        AtomicInteger mappedVehicleCount = new AtomicInteger();
-        AtomicInteger mappedVehicleTypeCount = new AtomicInteger();
-        AtomicInteger mappedVehicleModelCount = new AtomicInteger();
-        AtomicInteger mappedDeckPlanCount = new AtomicInteger();
-
         Frames_RelStructure framesRelStructure = new Frames_RelStructure();
         framesRelStructure.withCommonFrame(new ObjectFactory().createResourceFrame(netexResourceFrame));
         netexCompositeFrame.withFrames(framesRelStructure);
 
         logger.info("Preparing scrollable iterators");
-        prepareVehicleTypes(kjoretoyList, mappedVehicleTypeCount, netexResourceFrame);
-        prepareVehicleModels(kjoretoyList, mappedVehicleModelCount, netexResourceFrame);
-        prepareDeckPlans(kjoretoyList, mappedDeckPlanCount, netexResourceFrame);
-        prepareVehicles(kjoretoyList, mappedVehicleCount, netexResourceFrame);
+        prepareVehicleTypes(kjoretoyList, netexResourceFrame);
+        prepareVehicleModels(kjoretoyList,  netexResourceFrame);
+        prepareDeckPlans(kjoretoyList, netexResourceFrame);
+        prepareVehicles(kjoretoyList, netexResourceFrame);
 
         return publicationDeliveryCreator.createPublicationDelivery(netexCompositeFrame);
     }
 
-    private void prepareDeckPlans(List<Kjoretoydata> kjoretoyList, AtomicInteger mappedDeckPlanCount, org.rutebanken.netex.model.ResourceFrame netexResourceFrame) {
+    private void prepareDeckPlans(List<Kjoretoydata> kjoretoyList, org.rutebanken.netex.model.ResourceFrame netexResourceFrame) {
         if (!kjoretoyList.isEmpty()) {
             logger.info("There are deck plans to export");
 
             DeckPlans_RelStructure deckPlansRelStructure = new DeckPlans_RelStructure();
-            List<org.rutebanken.netex.model.DeckPlan> deckPlans = kjoretoyList.stream().map(vt -> {
-                return new org.rutebanken.netex.model.DeckPlan()
+            List<org.rutebanken.netex.model.DeckPlan> deckPlans = kjoretoyList.stream().map(vt ->
+                new org.rutebanken.netex.model.DeckPlan()
                         .withId(deckPlanId(vt, kjoretoyList.indexOf(vt)))
                         .withVersion("1")
-                        .withName(new MultilingualString().withContent(List.of(deckPlanName(vt))))
-                        .withDescription(new MultilingualString().withContent(List.of(deckPlanDescription(vt))));
-            }).toList();
+                        .withName(createMultilingualString(deckPlanName(vt)))
+                        .withDescription(createMultilingualString(deckPlanDescription(vt)))
+            ).toList();
 
             setField(DeckPlans_RelStructure.class, "deckPlan", deckPlansRelStructure, deckPlans);
             netexResourceFrame.setDeckPlans(deckPlansRelStructure);
@@ -97,24 +91,33 @@ public class MapperService {
         return karosseriType.getKodeNavn();
     }
 
-    private void prepareVehicleModels(List<Kjoretoydata> kjoretoyList, AtomicInteger mappedVehicleModelCount, org.rutebanken.netex.model.ResourceFrame resourceFrame) {
+    private void prepareVehicleModels(List<Kjoretoydata> kjoretoyList, org.rutebanken.netex.model.ResourceFrame resourceFrame) {
 
         if (!kjoretoyList.isEmpty()) {
             logger.info("There are vehicle models to export");
 
             VehicleModelsInFrame_RelStructure vehicleModelsInFrameRelStructure = new VehicleModelsInFrame_RelStructure();
-            List<org.rutebanken.netex.model.VehicleModel> vehicleModels = kjoretoyList.stream().map(vt -> {
-                return new org.rutebanken.netex.model.VehicleModel()
+            List<org.rutebanken.netex.model.VehicleModel> vehicleModels = kjoretoyList.stream().map(vt ->
+                new org.rutebanken.netex.model.VehicleModel()
                         .withId(vehicleModelId(vt, kjoretoyList.indexOf(vt)))
                         .withVersion("1")
-                        .withDescription(new MultilingualString().withContent(List.of(modelDescription(vt))));
-                }).toList();
+                        .withDescription(createMultilingualString(modelDescription(vt)))
+                ).toList();
 
             setField(VehicleModelsInFrame_RelStructure.class, "vehicleModel", vehicleModelsInFrameRelStructure, vehicleModels);
             resourceFrame.setVehicleModels(vehicleModelsInFrameRelStructure);
         } else {
             logger.info("No vehicle models to export");
         }
+    }
+
+    private MultilingualString createMultilingualString(String value) {
+        return new MultilingualString().withContent(List.of(createTextType(value)));
+    }
+
+    private JAXBElement<? extends TextType> createTextType(String value){
+        return netexObjectFactory.createMultilingualStringText(new TextType()
+                .withValue(value));
     }
 
     private String deckPlanDescription(Kjoretoydata vt) {
@@ -210,29 +213,22 @@ public class MapperService {
         return merke.getMerke() + generelt.getHandelsbetegnelse();
     }
 
-    private void prepareVehicles(List<Kjoretoydata> kjoretoyList, AtomicInteger mappedVehicleCount, org.rutebanken.netex.model.ResourceFrame resourceFrame) {
+    private void prepareVehicles(List<Kjoretoydata> kjoretoyList, org.rutebanken.netex.model.ResourceFrame resourceFrame) {
         if (!kjoretoyList.isEmpty()) {
             logger.info("There are vehicles to export");
 
             VehiclesInFrame_RelStructure vehiclesInFrame_relStructure = new VehiclesInFrame_RelStructure();
 
-            List<org.rutebanken.netex.model.Vehicle> vehicles = kjoretoyList.stream().map(kjoretoy -> {
-                return new org.rutebanken.netex.model.Vehicle()
+            List<org.rutebanken.netex.model.Vehicle> vehicles = kjoretoyList.stream().map(kjoretoy ->
+                new org.rutebanken.netex.model.Vehicle()
                         .withChassisNumber(kjoretoy.getKjoretoyId().getUnderstellsnummer())
                         .withRegistrationNumber(kjoretoy.getKjoretoyId().getKjennemerke())
                         .withId("AUTOSYS:Vehicle:" + kjoretoy.getKjoretoyId().getKjennemerke())
                         .withVersion("1")
                         .withTransportTypeRef(createVechicleTypeRef(kjoretoy, kjoretoyList.indexOf(kjoretoy)))
                         .withVehicleModelRef(createModelRef(kjoretoy, kjoretoyList.indexOf(kjoretoy)))
-                        // .withOperationalNumber("what is this??")
-                        // .withActualVehicleEquipments(null) ??
-                        // .withContactRef(null) ??
-                        // .withEquipmentProfiles(null) ??
-                        // .withTransportOrganisationRef(null) ??
-                        // .withStatus(null) ??
-                        // .withBrandingRef(null) ??
-                        .withRegistrationDate(kjoretoy.getRegistrering().getFomTidspunkt().toLocalDateTime());
-            }).toList();
+                        .withRegistrationDate(kjoretoy.getRegistrering().getFomTidspunkt().toLocalDateTime())
+            ).toList();
 
             setField(VehiclesInFrame_RelStructure.class, "vehicle", vehiclesInFrame_relStructure, vehicles);
             resourceFrame.setVehicles(vehiclesInFrame_relStructure);
@@ -259,15 +255,13 @@ public class MapperService {
         return deckPlanRefStructure;
     }
 
-    private void prepareVehicleTypes(List<Kjoretoydata> kjoretoyList, AtomicInteger mappedVehicleTypeCount, org.rutebanken.netex.model.ResourceFrame resourceFrame) {
+    private void prepareVehicleTypes(List<Kjoretoydata> kjoretoyList, org.rutebanken.netex.model.ResourceFrame resourceFrame) {
         // Override lists with custom iterator to be able to scroll database results on the fly.
         if (!kjoretoyList.isEmpty()) {
             logger.info("There are vehicle types to export");
 
             VehicleTypesInFrame_RelStructure vehicleTypesInFrameRelStructure = new VehicleTypesInFrame_RelStructure();
-            List<org.rutebanken.netex.model.VehicleType> vehicleTypes = kjoretoyList.stream().map(vt -> {
-                return mapOneVehicleType(vt, kjoretoyList.indexOf(vt));
-            }).toList();
+            List<org.rutebanken.netex.model.VehicleType> vehicleTypes = kjoretoyList.stream().map(vt -> mapOneVehicleType(vt, kjoretoyList.indexOf(vt))).toList();
 
             List<JAXBElement<org.rutebanken.netex.model.VehicleType>> jaxbVehicleTypes = vehicleTypes.stream().map(vt -> new ObjectFactory().createVehicleType(vt)).toList();
             setField(VehicleTypesInFrame_RelStructure.class, "transportType_Dummy", vehicleTypesInFrameRelStructure, jaxbVehicleTypes);
@@ -287,6 +281,12 @@ public class MapperService {
         var godkjenning = vt.getGodkjenning();
         if (godkjenning.getTekniskGodkjenning() == null) return vehicleType;
         var tekniskGodkjenning = godkjenning.getTekniskGodkjenning();
+        if(tekniskGodkjenning.getKjoretoyklassifisering() == null) return vehicleType;
+        var kjoretoyKlassifisering = tekniskGodkjenning.getKjoretoyklassifisering();
+        if(kjoretoyKlassifisering.getTekniskKode() == null) return vehicleType;
+        var tekniskKode = kjoretoyKlassifisering.getTekniskKode();
+        vehicleType.setTransportMode(mapTransportMode(tekniskKode));
+
         if (tekniskGodkjenning.getTekniskeData() == null) return vehicleType;
         var tekniskeData = tekniskGodkjenning.getTekniskeData();
 
@@ -349,6 +349,33 @@ public class MapperService {
         }
 
         return vehicleType;
+    }
+
+    private AllPublicTransportModesEnumeration mapTransportMode(Kode tekniskKode) {
+        return switch (tekniskKode.getKodeVerdi()) { // Beltebil (BB)
+            // Beltemotorsykkel (BM)
+            // Beltetraktor (C1) tung, bred	Beltetraktor med maksimal hastighet 40 km/t eller mindre, minste sporvidde for akselen nærmest føreren 1150 mm eller over, egenvekt over 600 kg, frihøyde 1000 mm eller mindre. Omfatter Jordbruks- eller skogbrukstraktor og traktor godkjent 1. juli 2005 og senere.
+            // Beltetraktor (C2) tung, smal	Beltetraktor med maksimal hastighet 40 km/t eller mindre, minste sporvidde under 1150 mm, egenvekt over 600 kg, frihøyde ikke over 600 mm. Når tyngdepunktshøyde delt på sporvidde er over 0,9, er maksimal hastighet 30 km/t. Omfatter Jordbruks- eller skogbrukstraktor og traktor godkjent 1. juli 2005 og senere.
+            // Beltetraktor (C3) lett	Beltetraktor med maksimal hastighet 40 km/t eller mindre og egenvekt 600 kg eller mindre. Omfatter Jordbruks- eller skogbrukstraktor og traktor godkjent 1. juli 2005 og senere.
+            // Beltetraktor (C4) særlige formål	Beltetraktor til særlige formål og med maksimal hastighet 40 km/t eller mindre. Omfatter Jordbruks- eller skogbrukstraktor og traktor godkjent 1. juli 2005 og senere.
+            // Beltetraktor (C5) hastighet > 40 km/t	Beltetraktor med maksimal hastighet over 40 km/t. Omfatter Jordbruks- eller skogbrukstraktor og traktor godkjent 1. juli 2005 og senere.
+            case "BB", "BM", "C1", "C2", "C3", "C4",
+                 "C5" ->
+                    AllPublicTransportModesEnumeration.SNOW_AND_ICE;
+            // Buss - totalvekt inntil 5000 kg	Bil for persontransport med over 8 sitteplasser i tillegg til førersetet og tillatt totalvekt ikke over 5000 kg
+            // Buss (terreng) - totalvekt inntil 5000 kg	Terrenggående bil for persontransport med over 8 sitteplasser i tillegg til førersetet og tillatt totalvekt ikke over 5000 kg
+            // Buss - totalvekt > 5000 kg	Bil for persontransport med over 8 sitteplasser i tillegg til førersetet og tillatt totalvekt over 5 000 kg (Buss)
+            // Buss (terreng) - totalvekt > 5000 kg	Terrenggående bil for persontransport med over 8 sitteplasser i tillegg til førersetet og tillatt totalvekt over 5 000 kg (Buss)
+            case "M2", "M2G", "M3",
+                 "M3G" ->
+                    AllPublicTransportModesEnumeration.BUS;
+            // Personbil	Bil for persontransport med høyst 8 sitteplasser i tillegg til førersetet (Personbil)
+            // Personbil (terreng)	Terrenggående bil for persontransport med høyst 8 sitteplasser i tillegg til førersetet
+            case "M1",
+                 "M1G" ->
+                    AllPublicTransportModesEnumeration.TAXI;  // Vi definerer personbiler som taxi, i forventning om at de personbiler som registreres i systemet blir det pga at de er taxi. Det ser ikke ut til å være noe data i Autosys som skiller ad en vanlig personbil og en taxi
+            default -> AllPublicTransportModesEnumeration.OTHER;
+        };
     }
 
     private PassengerCapacityStructure mapPassengerCapacity(Kjoretoydata vt, int index, TekniskeData.Persontall pt) {
@@ -433,6 +460,5 @@ public class MapperService {
             throw new RuntimeException("Cannot set field " + fieldName + " of " + instance, e);
         }
     }
-
 
 }
