@@ -111,11 +111,11 @@ public class MapperService {
         }
     }
 
-    private MultilingualString createMultilingualString(String vt) {
-        return new MultilingualString().withContent(List.of(createTextType(vt)));
+    private MultilingualString createMultilingualString(String value) {
+        return new MultilingualString().withContent(List.of(createTextType(value)));
     }
 
-    private JAXBElement<? extends TextType> createTextType (String value){
+    private JAXBElement<? extends TextType> createTextType(String value){
         return netexObjectFactory.createMultilingualStringText(new TextType()
                 .withValue(value));
     }
