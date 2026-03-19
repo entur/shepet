@@ -60,13 +60,13 @@ public class MapperService {
             logger.info("There are deck plans to export");
 
             DeckPlans_RelStructure deckPlansRelStructure = new DeckPlans_RelStructure();
-            List<org.rutebanken.netex.model.DeckPlan> deckPlans = kjoretoyList.stream().map(vt -> {
-                return new org.rutebanken.netex.model.DeckPlan()
+            List<org.rutebanken.netex.model.DeckPlan> deckPlans = kjoretoyList.stream().map(vt ->
+                new org.rutebanken.netex.model.DeckPlan()
                         .withId(deckPlanId(vt, kjoretoyList.indexOf(vt)))
                         .withVersion("1")
                         .withName(createMultilingualString(deckPlanName(vt)))
-                        .withDescription(createMultilingualString(deckPlanDescription(vt)));
-            }).toList();
+                        .withDescription(createMultilingualString(deckPlanDescription(vt)))
+            ).toList();
 
             setField(DeckPlans_RelStructure.class, "deckPlan", deckPlansRelStructure, deckPlans);
             netexResourceFrame.setDeckPlans(deckPlansRelStructure);
@@ -97,12 +97,12 @@ public class MapperService {
             logger.info("There are vehicle models to export");
 
             VehicleModelsInFrame_RelStructure vehicleModelsInFrameRelStructure = new VehicleModelsInFrame_RelStructure();
-            List<org.rutebanken.netex.model.VehicleModel> vehicleModels = kjoretoyList.stream().map(vt -> {
-                return new org.rutebanken.netex.model.VehicleModel()
+            List<org.rutebanken.netex.model.VehicleModel> vehicleModels = kjoretoyList.stream().map(vt ->
+                new org.rutebanken.netex.model.VehicleModel()
                         .withId(vehicleModelId(vt, kjoretoyList.indexOf(vt)))
                         .withVersion("1")
-                        .withDescription(createMultilingualString(modelDescription(vt)));
-                }).toList();
+                        .withDescription(createMultilingualString(modelDescription(vt)))
+                ).toList();
 
             setField(VehicleModelsInFrame_RelStructure.class, "vehicleModel", vehicleModelsInFrameRelStructure, vehicleModels);
             resourceFrame.setVehicleModels(vehicleModelsInFrameRelStructure);
@@ -219,16 +219,16 @@ public class MapperService {
 
             VehiclesInFrame_RelStructure vehiclesInFrame_relStructure = new VehiclesInFrame_RelStructure();
 
-            List<org.rutebanken.netex.model.Vehicle> vehicles = kjoretoyList.stream().map(kjoretoy -> {
-                return new org.rutebanken.netex.model.Vehicle()
+            List<org.rutebanken.netex.model.Vehicle> vehicles = kjoretoyList.stream().map(kjoretoy ->
+                new org.rutebanken.netex.model.Vehicle()
                         .withChassisNumber(kjoretoy.getKjoretoyId().getUnderstellsnummer())
                         .withRegistrationNumber(kjoretoy.getKjoretoyId().getKjennemerke())
                         .withId("AUTOSYS:Vehicle:" + kjoretoy.getKjoretoyId().getKjennemerke())
                         .withVersion("1")
                         .withTransportTypeRef(createVechicleTypeRef(kjoretoy, kjoretoyList.indexOf(kjoretoy)))
                         .withVehicleModelRef(createModelRef(kjoretoy, kjoretoyList.indexOf(kjoretoy)))
-                        .withRegistrationDate(kjoretoy.getRegistrering().getFomTidspunkt().toLocalDateTime());
-            }).toList();
+                        .withRegistrationDate(kjoretoy.getRegistrering().getFomTidspunkt().toLocalDateTime())
+            ).toList();
 
             setField(VehiclesInFrame_RelStructure.class, "vehicle", vehiclesInFrame_relStructure, vehicles);
             resourceFrame.setVehicles(vehiclesInFrame_relStructure);
@@ -261,9 +261,7 @@ public class MapperService {
             logger.info("There are vehicle types to export");
 
             VehicleTypesInFrame_RelStructure vehicleTypesInFrameRelStructure = new VehicleTypesInFrame_RelStructure();
-            List<org.rutebanken.netex.model.VehicleType> vehicleTypes = kjoretoyList.stream().map(vt -> {
-                return mapOneVehicleType(vt, kjoretoyList.indexOf(vt));
-            }).toList();
+            List<org.rutebanken.netex.model.VehicleType> vehicleTypes = kjoretoyList.stream().map(vt -> mapOneVehicleType(vt, kjoretoyList.indexOf(vt))).toList();
 
             List<JAXBElement<org.rutebanken.netex.model.VehicleType>> jaxbVehicleTypes = vehicleTypes.stream().map(vt -> new ObjectFactory().createVehicleType(vt)).toList();
             setField(VehicleTypesInFrame_RelStructure.class, "transportType_Dummy", vehicleTypesInFrameRelStructure, jaxbVehicleTypes);
@@ -287,7 +285,7 @@ public class MapperService {
         var kjoretoyKlassifisering = tekniskGodkjenning.getKjoretoyklassifisering();
         if(kjoretoyKlassifisering.getTekniskKode() == null) return vehicleType;
         var tekniskKode = kjoretoyKlassifisering.getTekniskKode();
-        vehicleType.setTransportMode(mapTransportMode(vt, tekniskKode));
+        vehicleType.setTransportMode(mapTransportMode(tekniskKode));
 
         if (tekniskGodkjenning.getTekniskeData() == null) return vehicleType;
         var tekniskeData = tekniskGodkjenning.getTekniskeData();
@@ -353,7 +351,7 @@ public class MapperService {
         return vehicleType;
     }
 
-    private AllPublicTransportModesEnumeration mapTransportMode(Kjoretoydata vt, Kode tekniskKode) {
+    private AllPublicTransportModesEnumeration mapTransportMode(Kode tekniskKode) {
         return switch (tekniskKode.getKodeVerdi()) { // Beltebil (BB)
             // Beltemotorsykkel (BM)
             // Beltetraktor (C1) tung, bred	Beltetraktor med maksimal hastighet 40 km/t eller mindre, minste sporvidde for akselen nærmest føreren 1150 mm eller over, egenvekt over 600 kg, frihøyde 1000 mm eller mindre. Omfatter Jordbruks- eller skogbrukstraktor og traktor godkjent 1. juli 2005 og senere.
