@@ -1,7 +1,6 @@
 package org.entur.shepet.auth;
 
 import org.entur.oauth2.AuthorizedWebClientBuilder;
-import org.entur.oauth2.JwtRoleAssignmentExtractor;
 import org.entur.oauth2.multiissuer.MultiIssuerAuthenticationManagerResolver;
 import org.entur.oauth2.multiissuer.MultiIssuerAuthenticationManagerResolverBuilder;
 import org.entur.oauth2.user.DefaultJwtUserInfoExtractor;
@@ -11,7 +10,7 @@ import org.rutebanken.helper.organisation.RoleAssignmentExtractor;
 import org.rutebanken.helper.organisation.user.UserInfoExtractor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
+import org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -50,20 +49,6 @@ public class OAuth2Config {
     }
 
     /**
-     * Extract role assignments from a JWT token.
-     *
-     */
-    @ConditionalOnProperty(
-            value = "shepet.security.role.assignment.extractor",
-            havingValue = "jwt",
-            matchIfMissing = true
-    )
-    @Bean
-    public RoleAssignmentExtractor jwtRoleAssignmentExtractor() {
-        return new JwtRoleAssignmentExtractor();
-    }
-
-    /**
      * Extract role assignments from the Baba user repository.
      *
      */
@@ -78,7 +63,6 @@ public class OAuth2Config {
     }
 
     @Bean
-    @Profile("!test")
     public MultiIssuerAuthenticationManagerResolver multiIssuerAuthenticationManagerResolver(
             @Value("${shepet.oauth2.resourceserver.auth0.entur.internal.jwt.audience:}")
             String enturInternalAuth0Audiences,
