@@ -337,9 +337,9 @@ public class MapperService {
             }
             if(motorOgDrivverk.getHybridKategori() != null) {
                 if(motorOgDrivverk.getHybridKategori().getKodeVerdi().equals("LADBAR")) {
-                    KeyValuesHelper.AddToKeyValues(vehicleType, "HybridCategory", "Chargeable");
+                    KeyValuesHelper.AddToKeyValues(vehicleType, "HybridCategory", "chargeable");
                 } else if(motorOgDrivverk.getHybridKategori().getKodeVerdi().equals("IKKE_LADBAR")) {
-                    KeyValuesHelper.AddToKeyValues(vehicleType, "HybridCategory", "NonChargeable");
+                    KeyValuesHelper.AddToKeyValues(vehicleType, "HybridCategory", "nonChargeable");
                 }
             }
         }
