@@ -28,4 +28,4 @@ Endpoint: `GET /services/autosys?registrationNumber=<plate>` → NeTEx XML.
 
 ### Note on dependencies
 
-`sobek-common` transitively pulls `spring-boot-starter-webclient:4.0.4` (Spring Boot 4 / Jackson 3) into this Spring Boot 3.5 application, breaking context startup. `shepet-app/pom.xml` excludes that starter as a workaround (shepet uses `RestClient`, not WebClient). The proper fix belongs upstream in sobek.
+`sobek-common` may transitively pull `spring-boot-starter-webclient:4.0.4` (Spring Boot 4 / Jackson 3) into this application and break context startup. If you hit this, exclude that starter in `shepet-app/pom.xml` (the Autosys client uses `RestClient`). The proper fix belongs upstream in sobek.
