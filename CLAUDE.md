@@ -29,7 +29,7 @@ GET /services/autosys?registrationNumber=EV25288
 
 Key external deps: `org.entur:netex-java-model` (NeTEx JAXB model, SNAPSHOT), `org.rutebanken.sobek:sobek-common` (provides `PublicationDeliveryCreator`, `SobekResourceFrameExporter`, `SobekComositeFrameExporter`, `KeyValuesHelper`), `org.entur.ror.helpers:{oauth2,organisation,permission-store-proxy}`.
 
-**sobek-common leaks Spring Boot 4.** It transitively pulls `spring-boot-starter-webclient:4.0.4` (Boot 4 / Jackson 3) into this Boot 3.5 / Jackson 2 app → duplicate `JacksonAutoConfiguration` + `tools.jackson` `NoClassDefFound`, context won't start. `shepet-app/pom.xml` excludes that starter (shepet uses `RestClient`, not WebClient). Real fix is upstream in sobek.
+**sobek-common can leak Spring Boot 4.** It transitively pulls `spring-boot-starter-webclient:4.0.4` (Boot 4 / Jackson 3) into this Boot 3.5 / Jackson 2 app → duplicate `JacksonAutoConfiguration` + `tools.jackson` `NoClassDefFound`, context won't start. If you hit this, exclude that starter from `sobek-common` in `shepet-app/pom.xml` (shepet uses `RestClient`, not WebClient). Real fix is upstream in sobek (#24) / the Boot 4 upgrade (#17).
 
 ## Build & test
 
@@ -97,7 +97,7 @@ Code/enum translations to know:
 
 ## NeTEx output config (properties)
 
-- `publicationDeliveryStreamingOutput.validateAgainstSchema` — validate marshalled XML against NeTEx 2.0 schema (`true` local/default, `false` in prod `application.properties`).
+- `publicationDeliveryStreamingOutput.validateAgainstSchema` — validate marshalled XML against NeTEx 2.0 schema. Code default `true` (`PublicationDeliveryStreamingOutput.java`); explicitly `false` in `application.properties` (prod), `true` in `application-local.properties` (local).
 - `netex.validPrefix=NMR`, `netex.profile.version=2.0:NO-NeTEx:2.0`.
 
 ## Conventions
