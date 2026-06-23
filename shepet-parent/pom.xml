@@ -49,6 +49,20 @@
 
     <repositories>
         <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>central</id>
+            <name>entur-release-milestone</name>
+            <url>https://entur2.jfrog.io/artifactory/entur-release-milestone</url>
+        </repository>
+        <repository>
+            <snapshots />
+            <id>snapshots</id>
+            <name>entur-snapshot-milestone</name>
+            <url>https://entur2.jfrog.io/artifactory/entur-snapshot-milestone</url>
+        </repository>
+        <repository>
             <id>central2</id>
             <name>Check central first to avoid a lot of not found warnings</name>
             <url>https://repo.maven.apache.org/maven2</url>
