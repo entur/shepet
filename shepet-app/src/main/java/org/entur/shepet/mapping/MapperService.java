@@ -332,14 +332,14 @@ public class MapperService {
                         .reduce(0.0, Double::sum);
                 
                 if (totalMaksNettoEffekt > 0) {
-                    KeyValuesHelper.AddToKeyValues(vehicleType, "MaximumEngineEffectKW", totalMaksNettoEffekt.toString());
+                    KeyValuesHelper.SetToKeyValues(vehicleType, "MaximumEngineEffectKW", totalMaksNettoEffekt.toString());
                 }
             }
             if(motorOgDrivverk.getHybridKategori() != null) {
                 if(motorOgDrivverk.getHybridKategori().getKodeVerdi().equals("LADBAR")) {
-                    KeyValuesHelper.AddToKeyValues(vehicleType, "HybridCategory", "chargeable");
+                    KeyValuesHelper.SetToKeyValues(vehicleType, "HybridCategory", "chargeable");
                 } else if(motorOgDrivverk.getHybridKategori().getKodeVerdi().equals("IKKE_LADBAR")) {
-                    KeyValuesHelper.AddToKeyValues(vehicleType, "HybridCategory", "nonChargeable");
+                    KeyValuesHelper.SetToKeyValues(vehicleType, "HybridCategory", "nonChargeable");
                 }
             }
         }
