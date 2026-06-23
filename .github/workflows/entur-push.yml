@@ -18,6 +18,9 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v6
+      - name: Copy maven settings
+        run: |
+          wget https://raw.githubusercontent.com/entur/ror-maven-settings/master/.m2/settings.xml -O .github/workflows/settings.xml
       - uses: actions/setup-java@v5
         with:
           java-version: 21
@@ -39,7 +42,7 @@ jobs:
             echo "AUTOSYS_API_APIKEY is set (length: ${#AUTOSYS_API_APIKEY})"
           fi
       - name: Run maven build
-        run: mvn -q verify
+        run: mvn -q verify -s .github/workflows/settings.xml
       - uses: actions/upload-artifact@v7.0.0
         with:
           path: shepet-app/target/*.jar
