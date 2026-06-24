@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.entur.ror</groupId>
         <artifactId>superpom</artifactId>
-        <version>6.1.0</version>
+        <version>6.4.0</version>
         <relativePath/>
     </parent>
     <groupId>org.entur.shepet</groupId>
@@ -40,9 +40,9 @@
         <netex-java-model.version>3.0.0-SNAPSHOT</netex-java-model.version>
         <entur.helpers.version>7.1.0</entur.helpers.version>
         <!-- Dependency versions -->
-        <slf4j.version>2.0.17</slf4j.version>
-        <lombok.version>1.18.44</lombok.version>
-        <swagger-jersey2.version>2.2.45</swagger-jersey2.version>
+        <slf4j.version>2.0.18</slf4j.version>
+        <lombok.version>1.18.46</lombok.version>
+        <swagger-jersey2.version>2.2.52</swagger-jersey2.version>
 
         <sobek.version>1.0.1-SNAPSHOT</sobek.version>
     </properties>
