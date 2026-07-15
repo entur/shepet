@@ -48,57 +48,27 @@
     </properties>
 
     <repositories>
-    <!-- Maven Central - Check first for widely available artifacts -->
-    <repository>
-        <id>central</id>
-        <name>Maven Central Repository</name>
-        <url>https://repo.maven.apache.org/maven2</url>
-        <releases>
-            <enabled>true</enabled>
-        </releases>
-        <snapshots>
-            <enabled>false</enabled>
-        </snapshots>
-    </repository>
-    
-    <!-- Entur JFrog - For Entur and Rutebanken artifacts -->
-    <repository>
-        <id>entur-releases</id>
-        <name>entur-release-milestone</name>
-        <url>https://entur2.jfrog.io/artifactory/entur-release-milestone</url>
-        <releases>
-            <enabled>true</enabled>
-        </releases>
-        <snapshots>
-            <enabled>false</enabled>
-        </snapshots>
-    </repository>
-    
-    <repository>
-        <id>entur-snapshots</id>
-        <name>entur-snapshot-milestone</name>
-        <url>https://entur2.jfrog.io/artifactory/entur-snapshot-milestone</url>
-        <releases>
-            <enabled>false</enabled>
-        </releases>
-        <snapshots>
-            <enabled>true</enabled>
-        </snapshots>
-    </repository>
-    
-    <!-- Sonatype Snapshots - Only if you need SNAPSHOT versions from central -->
-    <repository>
-        <id>maven-snapshots</id>
-        <name>Maven Central Snapshots</name>
-        <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        <releases>
-            <enabled>false</enabled>
-        </releases>
-        <snapshots>
-            <enabled>true</enabled>
-        </snapshots>
-    </repository>
-</repositories>
+        <repository>
+            <id>central2</id>
+            <name>Check central first to avoid a lot of not found warnings</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+        <repository>
+            <id>osgeo</id>
+            <name>Open Source Geospatial Foundation Repository</name>
+            <url>https://repo.osgeo.org/repository/release/</url>
+        </repository>
+        <repository>
+            <id>maven-snapshots</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <dependencyManagement>
         <dependencies>
