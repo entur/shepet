@@ -1,11 +1,6 @@
-FROM eclipse-temurin:21-jre-alpine
+FROM gcr.io/distroless/java21-debian12:nonroot
 WORKDIR /deployments
-COPY target/shepet.jar shepet.jar
-# Create group and user (Alpine syntax)
-RUN addgroup -g 2000 appuser \
-    && adduser -D -u 2000 -G appuser appuser \
-    && mkdir -p /deployments/data \
-    && chown -R appuser:appuser /deployments/data
-USER appuser
+COPY --from=builder --chown=nonroot:nonroot /deployments/shepet.jar shepet.jar
+COPY --from=builder --chown=nonroot:nonroot /deployments/data /deployments/data
 EXPOSE 8080
-CMD  [ "java", "-jar", "shepet.jar"]
+CMD ["shepet.jar"]
