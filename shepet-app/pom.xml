@@ -31,12 +31,6 @@
     </organization>
 
     <dependencies>
-        <!-- Sobek Common -->
-        <dependency>
-            <groupId>org.rutebanken.sobek</groupId>
-            <artifactId>sobek-common</artifactId>
-        </dependency>
-
         <!-- NeTEx Java Model -->
         <dependency>
             <groupId>org.entur</groupId>

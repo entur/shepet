@@ -16,10 +16,6 @@
 package org.entur.shepet.rest.exception;
 
 import com.google.common.collect.Sets;
-import jakarta.persistence.EntityExistsException;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.OptimisticLockException;
-import jakarta.validation.ValidationException;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -40,9 +36,6 @@ public class GeneralExceptionMapper implements ExceptionMapper<Exception> {
 
     public GeneralExceptionMapper() {
         mapping = new HashMap<>();
-        mapping.put(Response.Status.BAD_REQUEST,
-                Sets.newHashSet(ValidationException.class, OptimisticLockException.class, EntityNotFoundException.class));
-        mapping.put(Response.Status.CONFLICT, Sets.newHashSet(EntityExistsException.class));
         mapping.put(Response.Status.FORBIDDEN, Sets.newHashSet(AccessDeniedException.class));
         mapping.put(Response.Status.UNAUTHORIZED, Sets.newHashSet(NotAuthorizedException.class, NotAuthenticatedException.class));
     }

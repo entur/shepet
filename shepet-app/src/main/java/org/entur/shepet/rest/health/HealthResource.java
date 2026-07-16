@@ -29,7 +29,7 @@ import jakarta.ws.rs.core.Response;
 public class HealthResource {
     @GET
     @Path("/ready")
-    @Operation(summary = "Returns OK if Sobek is ready and can read from the database", responses = {
+    @Operation(summary = "Returns OK if Shepet is ready and can read from the database", responses = {
             @ApiResponse(responseCode = "200", description = "application is running")
     })
     public Response readinessProbe() {
@@ -38,7 +38,7 @@ public class HealthResource {
 
     @GET
     @Path("/live")
-    @Operation(summary = "Returns 200 OK if Sobek is running", responses = {
+    @Operation(summary = "Returns 200 OK if Shepet is running", responses = {
             @ApiResponse(responseCode = "200", description = "application is running")
     })
     public Response livenessProbe() {

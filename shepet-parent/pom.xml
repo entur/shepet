@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.entur.ror</groupId>
         <artifactId>superpom</artifactId>
-        <version>6.1.0</version>
+        <version>6.4.0</version>
         <relativePath/>
     </parent>
     <groupId>org.entur.shepet</groupId>
@@ -77,11 +77,6 @@
                 <groupId>org.entur.shepet</groupId>
                 <artifactId>shepet-service</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.rutebanken.sobek</groupId>
-                <artifactId>sobek-common</artifactId>
-                <version>${sobek.version}</version>
             </dependency>
 
             <!-- NeTEx Java Model -->

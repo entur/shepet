@@ -6,14 +6,14 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Objects;
 
+import org.entur.shepet.mapping.util.KeyValuesHelper;
+import org.entur.shepet.mapping.util.PublicationDeliveryCreator;
+import org.entur.shepet.mapping.util.SobekCompositeFrameExporter;
+import org.entur.shepet.mapping.util.SobekResourceFrameExporter;
 import org.entur.shepet.model.Kjoretoydata;
 import org.entur.shepet.model.Kode;
 import org.entur.shepet.model.TekniskeData;
 import org.rutebanken.netex.model.*;
-import org.rutebanken.sobek.exporter.PublicationDeliveryCreator;
-import org.rutebanken.sobek.exporter.SobekComositeFrameExporter;
-import org.rutebanken.sobek.exporter.SobekResourceFrameExporter;
-import org.rutebanken.sobek.netex.util.KeyValuesHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,14 +24,14 @@ import jakarta.xml.bind.JAXBElement;
 public class MapperService {
     private static final Logger logger = LoggerFactory.getLogger(MapperService.class);
     private final SobekResourceFrameExporter sobekResourceFrameExporter;
-    private final SobekComositeFrameExporter sobekComositeFrameExporter;
+    private final SobekCompositeFrameExporter sobekComositeFrameExporter;
     private final PublicationDeliveryCreator publicationDeliveryCreator;
     private static final ObjectFactory netexObjectFactory = new ObjectFactory();
 
     public MapperService(PublicationDeliveryCreator publicationDeliveryCreator,
-                                            SobekResourceFrameExporter sobekResourceFrameExporter,
-                                            SobekComositeFrameExporter sobekComositeFrameExporter) {
-        this.publicationDeliveryCreator = publicationDeliveryCreator;
+                         SobekResourceFrameExporter sobekResourceFrameExporter,
+                         SobekCompositeFrameExporter sobekComositeFrameExporter) {
+            this.publicationDeliveryCreator = publicationDeliveryCreator;
         this.sobekResourceFrameExporter = sobekResourceFrameExporter;
         this.sobekComositeFrameExporter = sobekComositeFrameExporter;
     }
