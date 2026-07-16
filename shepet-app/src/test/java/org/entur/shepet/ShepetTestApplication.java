@@ -17,9 +17,6 @@ package org.entur.shepet;
 
 
 import org.entur.shepet.auth.ShepetSecurityConfig;
-import org.rutebanken.sobek.exporter.PublicationDeliveryCreator;
-import org.rutebanken.sobek.netex.id.ValidPrefixList;
-import org.rutebanken.sobek.time.ExportTimeZone;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
@@ -30,11 +27,7 @@ import org.springframework.context.annotation.FilterType;
  * Run integration tests for the rest interface without security
  */
 @SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
-@ComponentScan( basePackageClasses = {PublicationDeliveryCreator.class,
-        ValidPrefixList.class,
-        ExportTimeZone.class,
-        },
-        excludeFilters = {
+@ComponentScan(excludeFilters = {
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes={ ShepetSecurityConfig.class,
                                                 ShepetApplication.class}),
 }, basePackages = { "org.entur"})
