@@ -68,22 +68,11 @@ jobs:
     with:
       image_artifact: ${{ needs.docker-build.outputs.image_artifact }}
 
-  trigger-downstream-ci:
-    if: github.repository_owner == 'entur' && github.event_name == 'push'
+  trigger-deploy:
+    if: github.event_name == 'push'
     needs: [docker-push]
-    runs-on: ubuntu-latest
-    steps:
-        - name: Trigger downstream CI
-          run: |
-            repo_owner="entur"
-            repo_name="shepet-deployment-config"
-            event_type="trigger-downstream-ci"
-            service="shepet"
-            image_name=${{ needs.docker-push.outputs.image_name }}
-            image_tag=${{ needs.docker-push.outputs.image_tag }} 
-            echo "Triggering downstream CI for $service with version ${{ env.GHA_DOCKER_PUSH_IMAGE_TAG }}"
-            curl -X POST \
-            -H "Authorization: token ${{ secrets.GITFLOW_PAT }}" \
-            -H "Accept: application/vnd.github.everest-preview+json" \
-            -H "Content-Type: application/json" https://api.github.com/repos/$repo_owner/$repo_name/dispatches \
-            -d "{\"event_type\": \"$event_type\", \"client_payload\": {\"service\": \"$service\", \"image_name\": \"$image_name\", \"image_tag\": \"$image_tag\", \"unit\": false, \"integration\": true}}"
+    uses: ./.github/workflows/trigger-deployment.yml
+    with:
+      image_tag: ${{ needs.docker-push.outputs.image_tag }}
+    secrets:
+      deployment_token: ${{ secrets.SHEPET_DEPLOYMENT_CONFIG_TOKEN }}
