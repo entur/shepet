@@ -10,7 +10,7 @@ import org.entur.shepet.model.GetKjoretoyResponse;
 import org.entur.shepet.rest.netex.publicationdelivery.PublicationDeliveryStreamingOutput;
 import org.entur.shepet.service.ShepetService;
 import org.junit.jupiter.api.Test;
-import org.rutebanken.netex.model.PublicationDeliveryStructure;
+import org.entur.netex2.model.PublicationDeliveryStructure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;

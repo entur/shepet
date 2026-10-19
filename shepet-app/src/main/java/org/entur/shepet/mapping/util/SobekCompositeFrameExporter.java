@@ -15,9 +15,9 @@
 
 package org.entur.shepet.mapping.util;
 
-import org.rutebanken.netex.model.CompositeFrame;
-import org.rutebanken.netex.model.LocaleStructure;
-import org.rutebanken.netex.model.VersionFrameDefaultsStructure;
+import org.entur.netex2.model.CompositeFrame;
+import org.entur.netex2.model.LocaleStructure;
+import org.entur.netex2.model.VersionFrameDefaultsStructure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -45,7 +45,7 @@ public class SobekCompositeFrameExporter {
     public CompositeFrame createCompositeFrame(String description) {
         CompositeFrame compositeFrame = new CompositeFrame();
         setFrameDefaultLocale(compositeFrame);
-        compositeFrame.setDescription(new org.rutebanken.netex.model.MultilingualString().withContent(description));
+        compositeFrame.setDescription(new org.entur.netex2.model.MultilingualString().withContent(description));
         // siteFrame.setCreated(Instant.now()); // Disabled because of OffsetDateTimeInstantConverter issues during test
         compositeFrame.setVersion("1");
         compositeFrame.setId(netexIdHelper.getNetexId("CompositeFrame", compositeFrame.hashCode()));

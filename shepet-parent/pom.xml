@@ -37,7 +37,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <netex-java-model.version>3.0.0-SNAPSHOT</netex-java-model.version>
+        <netex-java-model.version>3.0.0</netex-java-model.version>
         <entur.helpers.version>7.1.0</entur.helpers.version>
         <!-- Dependency versions -->
         <slf4j.version>2.0.17</slf4j.version>
@@ -58,16 +58,6 @@
             <name>Open Source Geospatial Foundation Repository</name>
             <url>https://repo.osgeo.org/repository/release/</url>
         </repository>
-        <repository>
-            <id>maven-snapshots</id>
-            <url>https://central.sonatype.com/repository/maven-snapshots</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
     </repositories>
 
     <dependencyManagement>
@@ -82,10 +72,9 @@
             <!-- NeTEx Java Model -->
             <dependency>
                 <groupId>org.entur</groupId>
-                <artifactId>netex-java-model</artifactId>
+                <artifactId>netex2-java-model</artifactId>
                 <version>${netex-java-model.version}</version>
             </dependency>
-
             <!-- SLF4J -->
             <dependency>
                 <groupId>org.slf4j</groupId>

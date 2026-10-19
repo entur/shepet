@@ -13,7 +13,7 @@ import org.entur.shepet.mapping.util.SobekResourceFrameExporter;
 import org.entur.shepet.model.Kjoretoydata;
 import org.entur.shepet.model.Kode;
 import org.entur.shepet.model.TekniskeData;
-import org.rutebanken.netex.model.*;
+import org.entur.netex2.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -55,13 +55,13 @@ public class MapperService {
         return publicationDeliveryCreator.createPublicationDelivery(netexCompositeFrame);
     }
 
-    private void prepareDeckPlans(List<Kjoretoydata> kjoretoyList, org.rutebanken.netex.model.ResourceFrame netexResourceFrame) {
+    private void prepareDeckPlans(List<Kjoretoydata> kjoretoyList, org.entur.netex2.model.ResourceFrame netexResourceFrame) {
         if (!kjoretoyList.isEmpty()) {
             logger.info("There are deck plans to export");
 
             DeckPlans_RelStructure deckPlansRelStructure = new DeckPlans_RelStructure();
-            List<org.rutebanken.netex.model.DeckPlan> deckPlans = kjoretoyList.stream().map(vt ->
-                new org.rutebanken.netex.model.DeckPlan()
+            List<org.entur.netex2.model.DeckPlan> deckPlans = kjoretoyList.stream().map(vt ->
+                new org.entur.netex2.model.DeckPlan()
                         .withId(deckPlanId(vt, kjoretoyList.indexOf(vt)))
                         .withVersion("1")
                         .withName(createMultilingualString(deckPlanName(vt)))
@@ -91,14 +91,14 @@ public class MapperService {
         return karosseriType.getKodeNavn();
     }
 
-    private void prepareVehicleModels(List<Kjoretoydata> kjoretoyList, org.rutebanken.netex.model.ResourceFrame resourceFrame) {
+    private void prepareVehicleModels(List<Kjoretoydata> kjoretoyList, org.entur.netex2.model.ResourceFrame resourceFrame) {
 
         if (!kjoretoyList.isEmpty()) {
             logger.info("There are vehicle models to export");
 
             VehicleModelsInFrame_RelStructure vehicleModelsInFrameRelStructure = new VehicleModelsInFrame_RelStructure();
-            List<org.rutebanken.netex.model.VehicleModel> vehicleModels = kjoretoyList.stream().map(vt ->
-                new org.rutebanken.netex.model.VehicleModel()
+            List<org.entur.netex2.model.VehicleModel> vehicleModels = kjoretoyList.stream().map(vt ->
+                new org.entur.netex2.model.VehicleModel()
                         .withId(vehicleModelId(vt, kjoretoyList.indexOf(vt)))
                         .withVersion("1")
                         .withDescription(createMultilingualString(modelDescription(vt)))
@@ -213,21 +213,21 @@ public class MapperService {
         return merke.getMerke() + generelt.getHandelsbetegnelse();
     }
 
-    private void prepareVehicles(List<Kjoretoydata> kjoretoyList, org.rutebanken.netex.model.ResourceFrame resourceFrame) {
+    private void prepareVehicles(List<Kjoretoydata> kjoretoyList, org.entur.netex2.model.ResourceFrame resourceFrame) {
         if (!kjoretoyList.isEmpty()) {
             logger.info("There are vehicles to export");
 
             VehiclesInFrame_RelStructure vehiclesInFrame_relStructure = new VehiclesInFrame_RelStructure();
 
-            List<org.rutebanken.netex.model.Vehicle> vehicles = kjoretoyList.stream().map(kjoretoy ->
-                new org.rutebanken.netex.model.Vehicle()
+            List<org.entur.netex2.model.Vehicle> vehicles = kjoretoyList.stream().map(kjoretoy ->
+                new org.entur.netex2.model.Vehicle()
                         .withChassisNumber(kjoretoy.getKjoretoyId().getUnderstellsnummer())
                         .withRegistrationNumber(kjoretoy.getKjoretoyId().getKjennemerke())
                         .withId("AUTOSYS:Vehicle:" + kjoretoy.getKjoretoyId().getKjennemerke())
                         .withVersion("1")
                         .withTransportTypeRef(createVechicleTypeRef(kjoretoy, kjoretoyList.indexOf(kjoretoy)))
                         .withVehicleModelRef(createModelRef(kjoretoy, kjoretoyList.indexOf(kjoretoy)))
-                        .withRegistrationDate(kjoretoy.getRegistrering().getFomTidspunkt().toLocalDateTime())
+                        .withRegistrationDate(kjoretoy.getRegistrering().getFomTidspunkt().toLocalDate())
             ).toList();
 
             setField(VehiclesInFrame_RelStructure.class, "vehicle", vehiclesInFrame_relStructure, vehicles);
@@ -255,16 +255,16 @@ public class MapperService {
         return deckPlanRefStructure;
     }
 
-    private void prepareVehicleTypes(List<Kjoretoydata> kjoretoyList, org.rutebanken.netex.model.ResourceFrame resourceFrame) {
+    private void prepareVehicleTypes(List<Kjoretoydata> kjoretoyList, org.entur.netex2.model.ResourceFrame resourceFrame) {
         // Override lists with custom iterator to be able to scroll database results on the fly.
         if (!kjoretoyList.isEmpty()) {
             logger.info("There are vehicle types to export");
 
             VehicleTypesInFrame_RelStructure vehicleTypesInFrameRelStructure = new VehicleTypesInFrame_RelStructure();
-            List<org.rutebanken.netex.model.VehicleType> vehicleTypes = kjoretoyList.stream().map(vt -> mapOneVehicleType(vt, kjoretoyList.indexOf(vt))).toList();
+            List<org.entur.netex2.model.VehicleType> vehicleTypes = kjoretoyList.stream().map(vt -> mapOneVehicleType(vt, kjoretoyList.indexOf(vt))).toList();
 
-            List<JAXBElement<org.rutebanken.netex.model.VehicleType>> jaxbVehicleTypes = vehicleTypes.stream().map(vt -> new ObjectFactory().createVehicleType(vt)).toList();
-            setField(VehicleTypesInFrame_RelStructure.class, "transportType_Dummy", vehicleTypesInFrameRelStructure, jaxbVehicleTypes);
+            List<JAXBElement<org.entur.netex2.model.VehicleType>> jaxbVehicleTypes = vehicleTypes.stream().map(vt -> new ObjectFactory().createVehicleType(vt)).toList();
+            setField(VehicleTypesInFrame_RelStructure.class, "transportType", vehicleTypesInFrameRelStructure, jaxbVehicleTypes);
             resourceFrame.setVehicleTypes(vehicleTypesInFrameRelStructure);
         } else {
             logger.info("No vehicle types to export");
@@ -272,7 +272,7 @@ public class MapperService {
     }
 
     private VehicleType mapOneVehicleType(Kjoretoydata vt, int index) {
-        var vehicleType = new org.rutebanken.netex.model.VehicleType()
+        var vehicleType = new org.entur.netex2.model.VehicleType()
                 .withId(vehicleTypeId(vt, index))
                 .withDeckPlanRef(createDeckPlanRef(vt, index))
                 .withVersion("1");
@@ -309,7 +309,7 @@ public class MapperService {
 
         var miljoData = tekniskeData.getMiljodata();
         if(miljoData != null) {
-            if(miljoData.getEuroKlasse() != null) vehicleType.withEuroClass(miljoData.getEuroKlasse().getKodeVerdi());
+            if(miljoData.getEuroKlasse() != null) vehicleType.withEuroClass(mapEuroClass(miljoData.getEuroKlasse()));
             if(miljoData.getMiljoOgdrivstoffGruppe() != null) {
                 vehicleType.withFuelTypes(miljoData.getMiljoOgdrivstoffGruppe().stream().map(this::mapFuelType).toList());
             }
@@ -349,6 +349,40 @@ public class MapperService {
         }
 
         return vehicleType;
+    }
+
+    private String mapEuroClass(Kode euroKode) {
+        if(euroKode.getKodeVerdi() == null) return null;
+
+        return switch (euroKode.getKodeVerdi()) {
+            case "0" -> null; // Nullutslipp	0-utslipp
+//            1L	Euro 1	Euro 1L - 70/220/EØF*93/59/EØF - omfatter også tunge bensin M og N
+//            1T	Euro I	Euro 1T - 88/77/EØF*91/542/EØF
+            case "1L", "1T" -> "Euro1";
+//        2L	Euro 2	Euro 2L - 70/220/EØF*96/44/EF eller 70/220/EØF*96/69/EF - omfatter også tunge bensin M og N
+//        2T	Euro II	Euro 2T - 88/77/EØF*96/1/EF
+            case "2L", "2T" -> "Euro2";
+//        3L	Euro 3	Euro 3L - 70/220/EØF*2003/76/EF - omfatter også tunge bensin M og N
+//        3T	Euro III	Euro 3T - 88/77/EØF*2001/27/EF
+            case "3L", "3T" -> "Euro3";
+//        4L	Euro 4	Euro 4L - 70/220/EØF*2003/76/EF - omfatter også tunge bensin M og N
+//        4M	Euro 4M	Euro 4M - Avgassdirektiv EU 134/2014 (MC)
+//                4T	Euro IV	Euro 4T - 88/77/EØF*2001/27/EF eller 2005/55/EF*2006/51/EF
+            case "4L", "4M", "4T" -> "Euro4";
+//        5L	Euro 5	Euro 5L - EF 715/2007*EF 459/2012 (med bokstavene A til M)
+//        5M	Euro 5M	Euro 5M - Avgassdirektiv EU 134/2014 (MC)
+//                5T	Euro V	Euro 5T - 88/77/EØF*2001/27/EF eller 2005/55/EF*2008/74/EF
+            case "5L", "5M", "5T" -> "Euro5";
+//        6L	Euro 6	Euro 6L - EF 715/2007*EF 459/2012 (med bokstavene N til ZC)
+//        6M	Euro 6M	Euro 6M - Avgassdirektiv EU 134/2014 (MC)
+//                6T	Euro VI	Euro 6T - EF 595/2009
+            case "6L", "6M", "6T" -> "Euro6";
+//        ET	EEV	EEV (Enhanced Environmentally Friendly Vehicle), frivillig Euro-avgasskode for tunge kjøretøy
+//        U	Før Euro	Ikke Euro-klassifisert (før 1995, se kravnivå iht. KTK)
+            case "ET" -> null;
+            case "U" -> null;
+            default -> null;
+        };
     }
 
     private AllPublicTransportModesEnumeration mapTransportMode(Kode tekniskKode) {
