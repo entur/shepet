@@ -1,15 +1,13 @@
 package org.entur.shepet.mapping;
 
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
-import org.entur.shepet.mapping.util.KeyValuesHelper;
-import org.entur.shepet.mapping.util.PublicationDeliveryCreator;
-import org.entur.shepet.mapping.util.SobekCompositeFrameExporter;
-import org.entur.shepet.mapping.util.SobekResourceFrameExporter;
+import org.entur.shepet.mapping.util.*;
 import org.entur.shepet.model.Kjoretoydata;
 import org.entur.shepet.model.Kode;
 import org.entur.shepet.model.TekniskeData;
@@ -26,14 +24,16 @@ public class MapperService {
     private final SobekResourceFrameExporter sobekResourceFrameExporter;
     private final SobekCompositeFrameExporter sobekComositeFrameExporter;
     private final PublicationDeliveryCreator publicationDeliveryCreator;
+    private final ExportTimeZone exportTimeZone;
     private static final ObjectFactory netexObjectFactory = new ObjectFactory();
 
     public MapperService(PublicationDeliveryCreator publicationDeliveryCreator,
                          SobekResourceFrameExporter sobekResourceFrameExporter,
-                         SobekCompositeFrameExporter sobekComositeFrameExporter) {
+                         SobekCompositeFrameExporter sobekComositeFrameExporter, ExportTimeZone exportTimeZone) {
             this.publicationDeliveryCreator = publicationDeliveryCreator;
         this.sobekResourceFrameExporter = sobekResourceFrameExporter;
         this.sobekComositeFrameExporter = sobekComositeFrameExporter;
+        this.exportTimeZone = exportTimeZone;
     }
 
     public PublicationDeliveryStructure exportPublicationDeliveryWithAutosysVehicle(List<Kjoretoydata> kjoretoyList) {
@@ -68,7 +68,7 @@ public class MapperService {
                         .withDescription(createMultilingualString(deckPlanDescription(vt)))
             ).toList();
 
-            setField(DeckPlans_RelStructure.class, "deckPlan", deckPlansRelStructure, deckPlans);
+            deckPlansRelStructure.withDeckPlan(deckPlans);
             netexResourceFrame.setDeckPlans(deckPlansRelStructure);
         } else {
             logger.info("No deck plans to export");
@@ -104,7 +104,7 @@ public class MapperService {
                         .withDescription(createMultilingualString(modelDescription(vt)))
                 ).toList();
 
-            setField(VehicleModelsInFrame_RelStructure.class, "vehicleModel", vehicleModelsInFrameRelStructure, vehicleModels);
+            vehicleModelsInFrameRelStructure.withVehicleModel(vehicleModels);
             resourceFrame.setVehicleModels(vehicleModelsInFrameRelStructure);
         } else {
             logger.info("No vehicle models to export");
@@ -219,18 +219,24 @@ public class MapperService {
 
             VehiclesInFrame_RelStructure vehiclesInFrame_relStructure = new VehiclesInFrame_RelStructure();
 
-            List<org.entur.netex2.model.Vehicle> vehicles = kjoretoyList.stream().map(kjoretoy ->
-                new org.entur.netex2.model.Vehicle()
+            List<org.entur.netex2.model.Vehicle> vehicles = kjoretoyList.stream().map(kjoretoy -> {
+                org.entur.netex2.model.Vehicle vehicle = new org.entur.netex2.model.Vehicle()
                         .withChassisNumber(kjoretoy.getKjoretoyId().getUnderstellsnummer())
                         .withRegistrationNumber(kjoretoy.getKjoretoyId().getKjennemerke())
                         .withId("AUTOSYS:Vehicle:" + kjoretoy.getKjoretoyId().getKjennemerke())
                         .withVersion("1")
                         .withTransportTypeRef(createVechicleTypeRef(kjoretoy, kjoretoyList.indexOf(kjoretoy)))
-                        .withVehicleModelRef(createModelRef(kjoretoy, kjoretoyList.indexOf(kjoretoy)))
-                        .withRegistrationDate(kjoretoy.getRegistrering().getFomTidspunkt().toLocalDate())
-            ).toList();
+                        .withVehicleModelRef(createModelRef(kjoretoy, kjoretoyList.indexOf(kjoretoy)));
+                
+                if (kjoretoy.getRegistrering() != null && kjoretoy.getRegistrering().getFomTidspunkt() != null) {
+                    vehicle.withRegistrationDate(kjoretoy.getRegistrering().getFomTidspunkt()
+                            .atZoneSameInstant(exportTimeZone.getDefaultTimeZoneId()).toLocalDate());
+                }
+                
+                return vehicle;
+            }).toList();
 
-            setField(VehiclesInFrame_RelStructure.class, "vehicle", vehiclesInFrame_relStructure, vehicles);
+            vehiclesInFrame_relStructure.withVehicle(vehicles);
             resourceFrame.setVehicles(vehiclesInFrame_relStructure);
         } else {
             logger.info("No vehicles to export");
@@ -263,8 +269,8 @@ public class MapperService {
             VehicleTypesInFrame_RelStructure vehicleTypesInFrameRelStructure = new VehicleTypesInFrame_RelStructure();
             List<org.entur.netex2.model.VehicleType> vehicleTypes = kjoretoyList.stream().map(vt -> mapOneVehicleType(vt, kjoretoyList.indexOf(vt))).toList();
 
-            List<JAXBElement<org.entur.netex2.model.VehicleType>> jaxbVehicleTypes = vehicleTypes.stream().map(vt -> new ObjectFactory().createVehicleType(vt)).toList();
-            setField(VehicleTypesInFrame_RelStructure.class, "transportType", vehicleTypesInFrameRelStructure, jaxbVehicleTypes);
+            Collection<JAXBElement<? extends DataManagedObjectStructure>> jaxbVehicleTypes = vehicleTypes.stream().map(vt -> new ObjectFactory().createVehicleType(vt)).collect(Collectors.toSet());
+            vehicleTypesInFrameRelStructure.withTransportType(jaxbVehicleTypes);
             resourceFrame.setVehicleTypes(vehicleTypesInFrameRelStructure);
         } else {
             logger.info("No vehicle types to export");
@@ -479,20 +485,6 @@ public class MapperService {
             default -> // "INGEN", annet
                     null;
         };
-    }
-
-    /**
-     * Set field value with reflection.
-     * Used for setting list values in netex model.
-     */
-    private void setField(Class clazz, String fieldName, Object instance, Object fieldValue) {
-        try {
-            Field field = clazz.getDeclaredField(fieldName);
-            field.setAccessible(true);
-            field.set(instance, fieldValue);
-        } catch (IllegalAccessException | NoSuchFieldException e) {
-            throw new RuntimeException("Cannot set field " + fieldName + " of " + instance, e);
-        }
     }
 
 }
