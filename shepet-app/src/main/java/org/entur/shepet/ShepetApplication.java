@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Configuration;
 
 @SpringBootApplication
 @Configuration
-@ComponentScan(basePackages = { "org.entur", "org.entur.shepet", "org.rutebanken.sobek"})
+@ComponentScan(basePackages = { "org.entur", "org.entur.shepet"})
 public class ShepetApplication {
 
     public static void main(String[] args) {
