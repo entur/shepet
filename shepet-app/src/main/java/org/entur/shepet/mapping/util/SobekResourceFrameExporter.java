@@ -15,10 +15,7 @@
 
 package org.entur.shepet.mapping.util;
 
-import org.entur.netex2.model.LocaleStructure;
-import org.entur.netex2.model.MultilingualString;
 import org.entur.netex2.model.ResourceFrame;
-import org.entur.netex2.model.VersionFrameDefaultsStructure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,33 +25,18 @@ public class SobekResourceFrameExporter {
 
     private final NetexIdHelper netexIdHelper;
 
-    private final ExportTimeZone exportTimeZone;
-
-
     @Autowired
-    public SobekResourceFrameExporter(NetexIdHelper netexIdHelper, ExportTimeZone exportTimeZone) {
+    public SobekResourceFrameExporter(NetexIdHelper netexIdHelper) {
 
         this.netexIdHelper = netexIdHelper;
-        this.exportTimeZone = exportTimeZone;
     }
 
 
-    public ResourceFrame createResourceFrame(String description){
+    public ResourceFrame createResourceFrame(){
         ResourceFrame resourceFrame = new ResourceFrame();
-        resourceFrame.setDescription(new MultilingualString().withContent(description));
         resourceFrame.setVersion("1");
         resourceFrame.setId(netexIdHelper.getNetexId("ResourceFrame",resourceFrame.hashCode()));
 
         return resourceFrame;
     }
-
-    public void setFrameDefaultLocale(ResourceFrame resourceFrame) {
-
-        LocaleStructure localeStructure = new LocaleStructure();
-        localeStructure.setTimeZone(exportTimeZone.getDefaultTimeZoneId().toString());
-        VersionFrameDefaultsStructure versionFrameDefaultsStructure = new VersionFrameDefaultsStructure();
-        versionFrameDefaultsStructure.setDefaultLocale(localeStructure);
-        resourceFrame.setFrameDefaults(versionFrameDefaultsStructure);
-    }
-
 }

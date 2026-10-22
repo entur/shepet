@@ -39,8 +39,8 @@ public class MapperService {
     public PublicationDeliveryStructure exportPublicationDeliveryWithAutosysVehicle(List<Kjoretoydata> kjoretoyList) {
         logger.info("Preparing publication delivery export");
 
-        final CompositeFrame netexCompositeFrame = sobekComositeFrameExporter.createCompositeFrame("Composite frame ");
-        final ResourceFrame netexResourceFrame = sobekResourceFrameExporter.createResourceFrame("Resource frame ");
+        final CompositeFrame netexCompositeFrame = sobekComositeFrameExporter.createCompositeFrame();
+        final ResourceFrame netexResourceFrame = sobekResourceFrameExporter.createResourceFrame();
 
         Frames_RelStructure framesRelStructure = new Frames_RelStructure();
         framesRelStructure.withCommonFrame(new ObjectFactory().createResourceFrame(netexResourceFrame));
@@ -49,46 +49,9 @@ public class MapperService {
         logger.info("Preparing scrollable iterators");
         prepareVehicleTypes(kjoretoyList, netexResourceFrame);
         prepareVehicleModels(kjoretoyList,  netexResourceFrame);
-        prepareDeckPlans(kjoretoyList, netexResourceFrame);
         prepareVehicles(kjoretoyList, netexResourceFrame);
 
         return publicationDeliveryCreator.createPublicationDelivery(netexCompositeFrame);
-    }
-
-    private void prepareDeckPlans(List<Kjoretoydata> kjoretoyList, org.entur.netex2.model.ResourceFrame netexResourceFrame) {
-        if (!kjoretoyList.isEmpty()) {
-            logger.info("There are deck plans to export");
-
-            DeckPlans_RelStructure deckPlansRelStructure = new DeckPlans_RelStructure();
-            List<org.entur.netex2.model.DeckPlan> deckPlans = kjoretoyList.stream().map(vt ->
-                new org.entur.netex2.model.DeckPlan()
-                        .withId(deckPlanId(vt, kjoretoyList.indexOf(vt)))
-                        .withVersion("1")
-                        .withName(createMultilingualString(deckPlanName(vt)))
-                        .withDescription(createMultilingualString(deckPlanDescription(vt)))
-            ).toList();
-
-            deckPlansRelStructure.withDeckPlan(deckPlans);
-            netexResourceFrame.setDeckPlans(deckPlansRelStructure);
-        } else {
-            logger.info("No deck plans to export");
-        }
-
-    }
-
-    private String deckPlanName(Kjoretoydata vt) {
-        if (vt.getGodkjenning() == null) return "";
-        var godkjenning = vt.getGodkjenning();
-        if (godkjenning.getTekniskGodkjenning() == null) return "";
-        var tekniskGodkjenning = godkjenning.getTekniskGodkjenning();
-        if (tekniskGodkjenning.getKjoretoyklassifisering() == null) return "";
-        var tekniskeData = tekniskGodkjenning.getTekniskeData();
-        if(tekniskeData == null) return "";
-        var kaorsseriOgLasteplan = tekniskeData.getKarosseriOgLasteplan();
-        if(kaorsseriOgLasteplan == null) return "";
-        var karosseriType = kaorsseriOgLasteplan.getKarosseritype();
-        if(karosseriType == null) return "";
-        return karosseriType.getKodeNavn();
     }
 
     private void prepareVehicleModels(List<Kjoretoydata> kjoretoyList, org.entur.netex2.model.ResourceFrame resourceFrame) {
@@ -118,46 +81,6 @@ public class MapperService {
     private JAXBElement<? extends TextType> createTextType(String value){
         return netexObjectFactory.createMultilingualStringText(new TextType()
                 .withValue(value));
-    }
-
-    private String deckPlanDescription(Kjoretoydata vt) {
-        if (vt.getGodkjenning() == null) return "";
-        var godkjenning = vt.getGodkjenning();
-        if (godkjenning.getTekniskGodkjenning() == null) return "";
-        var tekniskGodkjenning = godkjenning.getTekniskGodkjenning();
-        if (tekniskGodkjenning.getKjoretoyklassifisering() == null) return "";
-        var tekniskeData = tekniskGodkjenning.getTekniskeData();
-        if(tekniskeData == null) return "";
-        var kaorsseriOgLasteplan = tekniskeData.getKarosseriOgLasteplan();
-        if(kaorsseriOgLasteplan == null) return "";
-        var karosseriType = kaorsseriOgLasteplan.getKarosseritype();
-        if(karosseriType == null) return "";
-        var generelt = tekniskeData.getGenerelt();
-        if(generelt == null) return "";
-        var merker = generelt.getMerke();
-        if(merker == null || merker.isEmpty()) return "";
-        var merke = merker.getFirst();
-        var handelsbetegnelse = generelt.getHandelsbetegnelse();
-        return merke.getMerke() + (handelsbetegnelse == null || handelsbetegnelse.isEmpty() ? "" : " "  + handelsbetegnelse.getFirst()) + " - " + karosseriType.getKodeNavn();
-    }
-
-    private String deckPlanId(Kjoretoydata vt, int index) {
-        if (vt.getGodkjenning() == null) return String.format("AUTOSYS:DeckPlan:%d", index);
-        var godkjenning = vt.getGodkjenning();
-        if (godkjenning.getTekniskGodkjenning() == null) return String.format("AUTOSYS:DeckPlan:%d", index);
-        var tekniskGodkjenning = godkjenning.getTekniskGodkjenning();
-        if (tekniskGodkjenning.getKjoretoyklassifisering() == null) return String.format("AUTOSYS:DeckPlan:%d", index);
-        var kjoretoyklassifisering = tekniskGodkjenning.getKjoretoyklassifisering();
-        if (kjoretoyklassifisering.getEfTypegodkjenning() == null) return String.format("AUTOSYS:DeckPlan:%d", index);
-        var efTypegodkjenning = kjoretoyklassifisering.getEfTypegodkjenning();
-        if (efTypegodkjenning.getTypegodkjenningNrTekst() == null) return String.format("AUTOSYS:DeckPlan:%d", index);
-        var tekniskeData = tekniskGodkjenning.getTekniskeData();
-        if(tekniskeData == null) return String.format("AUTOSYS:DeckPlan:%d", index);
-        var kaorsseriOgLasteplan = tekniskeData.getKarosseriOgLasteplan();
-        if(kaorsseriOgLasteplan == null) return String.format("AUTOSYS:DeckPlan:%d", index);
-        var karosseriType = kaorsseriOgLasteplan.getKarosseritype();
-        if(karosseriType == null) return String.format("AUTOSYS:DeckPlan:%d", index);
-        return String.format("AUTOSYS:DeckPlan:%s", efTypegodkjenning.getTypegodkjenningNrTekst() + "-" + karosseriType.getKodeVerdi());
     }
 
     private String vehicleModelId(Kjoretoydata vt, int index) {
@@ -255,12 +178,6 @@ public class MapperService {
         return netexObjectFactory.createTransportTypeRef(transportTypeRefStructure);
     }
 
-    private DeckPlanRefStructure createDeckPlanRef(Kjoretoydata vt, int index) {
-        DeckPlanRefStructure deckPlanRefStructure  = new DeckPlanRefStructure();
-        deckPlanRefStructure.setRef(deckPlanId(vt, index));
-        return deckPlanRefStructure;
-    }
-
     private void prepareVehicleTypes(List<Kjoretoydata> kjoretoyList, org.entur.netex2.model.ResourceFrame resourceFrame) {
         // Override lists with custom iterator to be able to scroll database results on the fly.
         if (!kjoretoyList.isEmpty()) {
@@ -280,7 +197,6 @@ public class MapperService {
     private VehicleType mapOneVehicleType(Kjoretoydata vt, int index) {
         var vehicleType = new org.entur.netex2.model.VehicleType()
                 .withId(vehicleTypeId(vt, index))
-                .withDeckPlanRef(createDeckPlanRef(vt, index))
                 .withVersion("1");
 
         if (vt.getGodkjenning() == null) return vehicleType;
