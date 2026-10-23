@@ -42,11 +42,9 @@ public class SobekCompositeFrameExporter {
     }
 
 
-    public CompositeFrame createCompositeFrame(String description) {
+    public CompositeFrame createCompositeFrame() {
         CompositeFrame compositeFrame = new CompositeFrame();
         setFrameDefaultLocale(compositeFrame);
-        compositeFrame.setDescription(new org.entur.netex2.model.MultilingualString().withContent(description));
-        // siteFrame.setCreated(Instant.now()); // Disabled because of OffsetDateTimeInstantConverter issues during test
         compositeFrame.setVersion("1");
         compositeFrame.setId(netexIdHelper.getNetexId("CompositeFrame", compositeFrame.hashCode()));
         return compositeFrame;
