@@ -118,9 +118,10 @@ class SobekResourceFrameExporterTest {
         assertNull(result.getResponsibilitySets(),
                 "ResponsibilitySets should be null when dataOwner is not provided");
 
-        // Verify FrameDefaults is NOT present when dataOwner is null
-        assertNull(result.getFrameDefaults(),
-                "FrameDefaults should be null when dataOwner is not provided");
+        // Locale defaults remain present without a data owner.
+        assertNotNull(result.getFrameDefaults());
+        assertNull(result.getFrameDefaults().getDefaultResponsibilitySetRef(),
+                "DefaultResponsibilitySetRef should be null when dataOwner is not provided");
     }
 
     @Test
