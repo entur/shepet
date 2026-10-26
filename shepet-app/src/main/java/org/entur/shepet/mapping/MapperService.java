@@ -11,6 +11,7 @@ import org.entur.shepet.mapping.util.*;
 import org.entur.shepet.model.Kjoretoydata;
 import org.entur.shepet.model.Kode;
 import org.entur.shepet.model.TekniskeData;
+import org.entur.shepet.model.dto.FetchVehicleErrorDto;
 import org.entur.shepet.model.dto.VehicleBulkInputDto;
 import org.entur.netex2.model.*;
 import org.slf4j.Logger;
@@ -35,12 +36,12 @@ public class MapperService {
         this.exportTimeZone = exportTimeZone;
     }
 
-    public PublicationDeliveryStructure exportPublicationDeliveryWithAutosysVehicle(List<Kjoretoydata> kjoretoyList, String dataOwner) {
-        return exportPublicationDeliveryWithAutosysVehicle(kjoretoyList, dataOwner, List.of());
+    public PublicationDeliveryStructure exportPublicationDeliveryWithAutosysVehicle(List<Kjoretoydata> kjoretoyList, List<FetchVehicleErrorDto> fetchErrors, String dataOwner) {
+        return exportPublicationDeliveryWithAutosysVehicle(kjoretoyList, fetchErrors, dataOwner, List.of());
     }
 
     public PublicationDeliveryStructure exportPublicationDeliveryWithAutosysVehicle(
-            List<Kjoretoydata> kjoretoyList, String dataOwner, List<VehicleBulkInputDto> vehicleInputs) {
+            List<Kjoretoydata> kjoretoyList, List<FetchVehicleErrorDto> fetchErrors, String dataOwner, List<VehicleBulkInputDto> vehicleInputs) {
         logger.info("Preparing publication delivery export");
 
         final ResourceFrame netexResourceFrame = sobekResourceFrameExporter.createResourceFrame(dataOwner);
@@ -50,10 +51,44 @@ public class MapperService {
         prepareVehicleTypes(kjoretoyList, netexResourceFrame);
         prepareVehicleModels(kjoretoyList,  netexResourceFrame);
         prepareVehicles(kjoretoyList, netexResourceFrame, vehicleInputs);
+        prepareFetchErrors(fetchErrors, netexResourceFrame);
 
         return publicationDeliveryCreator.createPublicationDelivery(netexResourceFrame);
     }
 
+    private void prepareFetchErrors(List<FetchVehicleErrorDto> fetchErrors, ResourceFrame netexResourceFrame) {
+        if (fetchErrors == null || fetchErrors.isEmpty()) {
+            logger.info("No fetch errors to serialize.");
+            return;
+        }
+
+        logger.info("Preparing fetch error key-values from {} fetch errors", fetchErrors.size());
+
+        KeyListStructure keyList = netexResourceFrame.getKeyList();
+        if (keyList == null) {
+            keyList = new KeyListStructure();
+            netexResourceFrame.setKeyList(keyList);
+        }
+
+        int index = 0;
+        for (FetchVehicleErrorDto fetchError : fetchErrors) {
+            // Add a key-value for the failed registration number
+            KeyValueStructure failedRegistrationNumberKeyValue = new KeyValueStructure()
+                    .withKey("fetchError-registrationNumber-" + index)
+                    .withValue(fetchError.getRegistrationNumber());
+            keyList.getKeyValue().add(failedRegistrationNumberKeyValue);
+
+            // Add a key-value for the error message
+            KeyValueStructure errorMessageKeyValue = new KeyValueStructure()
+                    .withKey("fetchError-message-" + index)
+                    .withValue(fetchError.getMessage());
+            keyList.getKeyValue().add(errorMessageKeyValue);
+
+            index++;
+        }
+    
+        logger.info("Fetch error key-values successfully serialized to netexResourceFrame.");
+    }
     private void prepareVehicleModels(List<Kjoretoydata> kjoretoyList, org.entur.netex2.model.ResourceFrame resourceFrame) {
 
         if (!kjoretoyList.isEmpty()) {

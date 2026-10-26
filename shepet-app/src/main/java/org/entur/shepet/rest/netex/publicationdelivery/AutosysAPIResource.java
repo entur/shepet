@@ -19,7 +19,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 import jakarta.xml.bind.JAXBException;
-import org.entur.shepet.model.GetKjoretoyResponse;
+import org.entur.shepet.model.Kjoretoydata;
+import org.entur.shepet.model.dto.BulkResultDto;
+import org.entur.shepet.model.dto.FetchVehicleErrorDto;
 import org.entur.shepet.model.dto.VehicleBulkInputDto;
 import org.entur.shepet.service.ShepetService;
 import org.entur.shepet.service.VehicleBulkService;
@@ -41,7 +43,6 @@ public class AutosysAPIResource {
 
     private static final Logger logger = LoggerFactory.getLogger(AutosysAPIResource.class);
 
-    private final ShepetService autosysVehicleService;
     private final VehicleBulkService vehicleBulkService;
     private final MapperService mapperService;
     private final PublicationDeliveryStreamingOutput publicationDeliveryStreamingOutput;
@@ -51,7 +52,6 @@ public class AutosysAPIResource {
                               ShepetService autosysVehicleService, 
                               VehicleBulkService vehicleBulkService,
                               MapperService mapperService) {
-        this.autosysVehicleService = autosysVehicleService;
         this.vehicleBulkService = vehicleBulkService;
         this.mapperService = mapperService;
         this.publicationDeliveryStreamingOutput = publicationDeliveryStreamingOutput;
@@ -59,13 +59,10 @@ public class AutosysAPIResource {
 
     @GET
     @Produces(MediaType.APPLICATION_XML + "; charset=UTF-8")
-    public Response getVehicleFromAutosys(@QueryParam("registrationNumber")String registrationNumber) throws JAXBException, IOException, SAXException {
+    public Response getVehicleFromAutosys(@QueryParam("registrationNumber")String registrationNumber,
+                                          @QueryParam("dataOwner") String dataOwner) throws JAXBException, IOException, SAXException {
 
-        GetKjoretoyResponse autosysData = autosysVehicleService.getVehicle(registrationNumber);
-
-        var netexData = mapperService.exportPublicationDeliveryWithAutosysVehicle(autosysData.getKjoretoydataListe(), null);
-
-        return Response.ok(publicationDeliveryStreamingOutput.stream(netexData)).build();
+        return getVehiclesFromAutosys(List.of(new VehicleBulkInputDto(registrationNumber, null)), dataOwner);
     }
 
     @POST
@@ -85,18 +82,14 @@ public class AutosysAPIResource {
                     .build();
         }
 
-        List<org.entur.shepet.model.Kjoretoydata> uniqueVehicleData = 
+        BulkResultDto fetchResults =
                 vehicleBulkService.fetchAndDeduplicateVehicles(vehicleBulkInputDtos);
 
-        if (uniqueVehicleData.isEmpty()) {
-            logger.warn("No vehicle data found for the provided identifiers");
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("No vehicles found for the provided identifiers")
-                    .build();
-        }
+        List<Kjoretoydata> uniqueVehicleData = fetchResults.uniqueVehicles();
+        List<FetchVehicleErrorDto> fetchErrors = fetchResults.fetchErrors();
 
         var netexData = mapperService.exportPublicationDeliveryWithAutosysVehicle(
-                uniqueVehicleData, dataOwner, vehicleBulkInputDtos);
+                uniqueVehicleData, fetchErrors, dataOwner, vehicleBulkInputDtos);
 
         return Response.ok(publicationDeliveryStreamingOutput.stream(netexData)).build();
     }

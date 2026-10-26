@@ -2,6 +2,8 @@ package org.entur.shepet.service;
 
 import org.entur.shepet.model.GetKjoretoyResponse;
 import org.entur.shepet.model.Kjoretoydata;
+import org.entur.shepet.model.dto.BulkResultDto;
+import org.entur.shepet.model.dto.FetchVehicleErrorDto;
 import org.entur.shepet.model.dto.VehicleBulkInputDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,13 +28,14 @@ public class VehicleBulkService {
      * Fetches vehicle data for all provided vehicle identifiers and returns a deduplicated list.
      *
      * @param vehicleInputs List of vehicle identifiers to fetch
-     * @return Deduplicated list of vehicle data
+     * @return Tuple containing deduplicated list of vehicle data and list of fetch errors
      */
-    public List<Kjoretoydata> fetchAndDeduplicateVehicles(List<VehicleBulkInputDto> vehicleInputs) {
+    public BulkResultDto fetchAndDeduplicateVehicles(List<VehicleBulkInputDto> vehicleInputs) {
         logger.info("Fetching vehicle data for {} identifiers", vehicleInputs.size());
 
         // Collect all vehicle data from Autosys
         List<Kjoretoydata> allVehicleData = new ArrayList<>();
+        List<FetchVehicleErrorDto> fetchErrors = new ArrayList<>();
 
         for (VehicleBulkInputDto vehicleInput : vehicleInputs) {
             try {
@@ -43,6 +46,11 @@ public class VehicleBulkService {
             } catch (Exception e) {
                 logger.warn("Failed to retrieve vehicle with registration number: {}",
                         vehicleInput.getRegistrationNumber(), e);
+                
+                // Create error DTO for this failed fetch
+                FetchVehicleErrorDto errorDto = new FetchVehicleErrorDto("Failed to fetch vehicle: " + e.getMessage(), vehicleInput.getRegistrationNumber());
+                fetchErrors.add(errorDto);
+                
                 // Continue with other vehicles
             }
         }
@@ -52,7 +60,10 @@ public class VehicleBulkService {
 
         logger.info("Reduced {} vehicles to {} unique vehicles", allVehicleData.size(), uniqueVehicleData.size());
 
-        return uniqueVehicleData;
+        logger.info("Reduced {} vehicles to {} unique vehicles with {} errors", 
+                allVehicleData.size(), uniqueVehicleData.size(), fetchErrors.size());
+
+        return new BulkResultDto(uniqueVehicleData, fetchErrors);
     }
 
     /**

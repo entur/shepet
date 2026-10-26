@@ -8,4 +8,9 @@ import lombok.Setter;
 public class VehicleBulkInputDto {
     private String registrationNumber;
     private String operationalNumber;
+
+    public VehicleBulkInputDto(String registrationNumber, String operationalNumber) {
+        this.registrationNumber = registrationNumber;
+        this.operationalNumber = operationalNumber;
+    }
 }

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 import org.entur.shepet.ShepetTestApplication;
 import org.entur.shepet.model.GetKjoretoyResponse;
@@ -34,7 +35,7 @@ public class MapperServiceTest {
 
         assertNotNull(autosysData);
 
-        var netexData = mapperService.exportPublicationDeliveryWithAutosysVehicle(autosysData.getKjoretoydataListe(), null);
+        var netexData = mapperService.exportPublicationDeliveryWithAutosysVehicle(autosysData.getKjoretoydataListe(), List.of(), null);
 
         assertNotNull(netexData);
 
@@ -48,7 +49,7 @@ public class MapperServiceTest {
 
         assertNotNull(autosysData);
 
-        var netexData = mapperService.exportPublicationDeliveryWithAutosysVehicle(autosysData.getKjoretoydataListe(), null);
+        var netexData = mapperService.exportPublicationDeliveryWithAutosysVehicle(autosysData.getKjoretoydataListe(), List.of(), null);
 
         assertNotNull(netexData);
 

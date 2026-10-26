@@ -19,7 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class VehicleBulkIntegrationTest {
+class VehicleBulkServiceTest {
 
     @Mock
     private PublicationDeliveryCreator publicationDeliveryCreator;
@@ -57,7 +57,7 @@ class VehicleBulkIntegrationTest {
 
         // Act
         PublicationDeliveryStructure result = mapperService.exportPublicationDeliveryWithAutosysVehicle(
-                vehicles, dataOwner, inputs);
+                vehicles, List.of(), dataOwner, inputs);
 
         // Assert
         assertNotNull(result);
@@ -79,7 +79,7 @@ class VehicleBulkIntegrationTest {
         when(sobekResourceFrameExporter.createResourceFrame(null)).thenReturn(resourceFrame);
 
         // Act
-        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, null, inputs);
+        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, List.of(), null, inputs);
 
         // Assert
         VehicleTypesInFrame_RelStructure vehicleTypes = resourceFrame.getVehicleTypes();
@@ -113,7 +113,7 @@ class VehicleBulkIntegrationTest {
         when(sobekResourceFrameExporter.createResourceFrame(null)).thenReturn(resourceFrame);
 
         // Act
-        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, null, inputs);
+        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, List.of(),null, inputs);
 
         // Assert
         VehicleModelsInFrame_RelStructure vehicleModels = resourceFrame.getVehicleModels();
@@ -146,7 +146,7 @@ class VehicleBulkIntegrationTest {
         when(sobekResourceFrameExporter.createResourceFrame(null)).thenReturn(resourceFrame);
 
         // Act
-        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, null, inputs);
+        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, List.of(),null, inputs);
 
         // Assert
         VehiclesInFrame_RelStructure vehiclesInFrame = resourceFrame.getVehicles();
@@ -184,7 +184,7 @@ class VehicleBulkIntegrationTest {
         when(sobekResourceFrameExporter.createResourceFrame(null)).thenReturn(resourceFrame);
 
         // Act
-        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, null, inputs);
+        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, List.of(),null, inputs);
 
         // Assert
         VehiclesInFrame_RelStructure vehiclesInFrame = resourceFrame.getVehicles();
@@ -205,7 +205,7 @@ class VehicleBulkIntegrationTest {
         when(sobekResourceFrameExporter.createResourceFrame(null)).thenReturn(resourceFrame);
 
         // Act
-        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, null, inputs);
+        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, List.of(),null, inputs);
 
         // Assert
         VehiclesInFrame_RelStructure vehiclesInFrame = resourceFrame.getVehicles();
@@ -239,9 +239,6 @@ class VehicleBulkIntegrationTest {
     }
 
     private VehicleBulkInputDto createVehicleInput(String registrationNumber, String operationalNumber) {
-        VehicleBulkInputDto dto = new VehicleBulkInputDto();
-        dto.setRegistrationNumber(registrationNumber);
-        dto.setOperationalNumber(operationalNumber);
-        return dto;
+        return new VehicleBulkInputDto(registrationNumber, operationalNumber);
     }
 }
