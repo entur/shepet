@@ -48,7 +48,7 @@ public class VehicleBulkService {
                         vehicleInput.getRegistrationNumber(), e);
                 
                 // Create error DTO for this failed fetch
-                FetchVehicleErrorDto errorDto = new FetchVehicleErrorDto("Failed to fetch vehicle: " + e.getMessage(), vehicleInput.getRegistrationNumber());
+                FetchVehicleErrorDto errorDto = new FetchVehicleErrorDto(e.getMessage(), vehicleInput.getRegistrationNumber());
                 fetchErrors.add(errorDto);
                 
                 // Continue with other vehicles
