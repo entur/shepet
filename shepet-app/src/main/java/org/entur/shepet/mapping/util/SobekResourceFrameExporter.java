@@ -44,28 +44,36 @@ public class SobekResourceFrameExporter {
         resourceFrame.setVersion("1");
         resourceFrame.setId(netexIdHelper.getNetexId("ResourceFrame",resourceFrame.hashCode()));
 
+        String responsibilitySetId = null;
+
         if(dataOwner != null && !dataOwner.isEmpty()) {
-            String responsibilitySetId = netexIdHelper.getNetexId("ResponsibilitySet", resourceFrame.hashCode());
+            responsibilitySetId = netexIdHelper.getNetexId("ResponsibilitySet", resourceFrame.hashCode());
             resourceFrame.withResponsibilitySets(
                     new ResponsibilitySetsInFrame_RelStructure().withResponsibilitySet(
                             new ResponsibilitySet().withId(responsibilitySetId)
                                     .withVersion("1")
                                     .withRoles(
-                                    new ResponsibilityRoleAssignments_RelStructure().withResponsibilityRoleAssignment(
-                                            new ResponsibilityRoleAssignment().withDataRoleType(DataRoleTypeEnumeration.OWNS)
-                                                    .withId(netexIdHelper.getNetexId("ResponsibilityRoleAssignment", resourceFrame.hashCode()))
-                                                    .withVersion("1")
-                                                    .withResponsibleOrganisationRef(new OrganisationRefStructure().withRef(dataOwner))
-                                    )
-                            )));
-            resourceFrame.withFrameDefaults(
-                    new VersionFrameDefaultsStructure()
-                            .withDefaultLocale(new LocaleStructure()
-                                    .withDefaultLanguage(defaultLanguage)
-                                    .withTimeZone(exportTimeZone.getDefaultTimeZoneId().toString()))
-                        .withDefaultResponsibilitySetRef(
-                            new ResponsibilitySetRefStructure().withRef(responsibilitySetId)));
+                                            new ResponsibilityRoleAssignments_RelStructure().withResponsibilityRoleAssignment(
+                                                    new ResponsibilityRoleAssignment().withDataRoleType(DataRoleTypeEnumeration.OWNS)
+                                                            .withId(netexIdHelper.getNetexId("ResponsibilityRoleAssignment", resourceFrame.hashCode()))
+                                                            .withVersion("1")
+                                                            .withResponsibleOrganisationRef(new OrganisationRefStructure().withRef(dataOwner))
+                                            )
+                                    )));
         }
+
+        VersionFrameDefaultsStructure frameDefaults =
+                new VersionFrameDefaultsStructure()
+                        .withDefaultLocale(new LocaleStructure()
+                                .withDefaultLanguage(defaultLanguage)
+                                .withTimeZone(exportTimeZone.getDefaultTimeZoneId().toString()));
+
+        if(responsibilitySetId != null) {
+            frameDefaults.withDefaultResponsibilitySetRef(
+                        new ResponsibilitySetRefStructure().withRef(responsibilitySetId));
+        }
+
+        resourceFrame.withFrameDefaults(frameDefaults);
 
         return resourceFrame;
     }
