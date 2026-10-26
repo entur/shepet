@@ -80,6 +80,14 @@ public class AutosysAPIResource {
                     .build();
         }
 
+        if (vehicleBulkInputDtos.stream().anyMatch(input -> input == null
+                || input.getRegistrationNumber() == null
+                || input.getRegistrationNumber().isBlank())) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Each vehicle must have a non-blank registrationNumber")
+                    .build();
+        }
+
         BulkResultDto fetchResults =
                 vehicleBulkService.fetchAndDeduplicateVehicles(vehicleBulkInputDtos);
 
