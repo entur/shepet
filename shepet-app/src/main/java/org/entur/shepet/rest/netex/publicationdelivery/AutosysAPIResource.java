@@ -23,7 +23,6 @@ import org.entur.shepet.model.Kjoretoydata;
 import org.entur.shepet.model.dto.BulkResultDto;
 import org.entur.shepet.model.dto.FetchVehicleErrorDto;
 import org.entur.shepet.model.dto.VehicleBulkInputDto;
-import org.entur.shepet.service.ShepetService;
 import org.entur.shepet.service.VehicleBulkService;
 import org.entur.shepet.mapping.MapperService;
 import org.slf4j.Logger;
@@ -49,7 +48,6 @@ public class AutosysAPIResource {
 
     @Autowired
     public AutosysAPIResource(PublicationDeliveryStreamingOutput publicationDeliveryStreamingOutput,
-                              ShepetService autosysVehicleService, 
                               VehicleBulkService vehicleBulkService,
                               MapperService mapperService) {
         this.vehicleBulkService = vehicleBulkService;

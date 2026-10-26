@@ -9,7 +9,6 @@ import org.entur.shepet.model.KjoretoyId;
 import org.entur.shepet.model.dto.BulkResultDto;
 import org.entur.shepet.model.dto.FetchVehicleErrorDto;
 import org.entur.shepet.model.dto.VehicleBulkInputDto;
-import org.entur.shepet.service.ShepetService;
 import org.entur.shepet.service.VehicleBulkService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,9 +26,6 @@ import static org.mockito.Mockito.*;
 class AutosysAPIResourceTest {
 
     @Mock
-    private ShepetService shepetService;
-
-    @Mock
     private VehicleBulkService vehicleBulkService;
 
     @Mock
@@ -44,7 +40,6 @@ class AutosysAPIResourceTest {
     void setUp() {
         autosysAPIResource = new AutosysAPIResource(
                 publicationDeliveryStreamingOutput,
-                shepetService,
                 vehicleBulkService,
                 mapperService
         );
