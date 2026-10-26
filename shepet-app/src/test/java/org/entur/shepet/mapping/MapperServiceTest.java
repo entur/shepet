@@ -34,7 +34,7 @@ public class MapperServiceTest {
 
         assertNotNull(autosysData);
 
-        var netexData = mapperService.exportPublicationDeliveryWithAutosysVehicle(autosysData.getKjoretoydataListe());
+        var netexData = mapperService.exportPublicationDeliveryWithAutosysVehicle(autosysData.getKjoretoydataListe(), null);
 
         assertNotNull(netexData);
 
@@ -48,7 +48,7 @@ public class MapperServiceTest {
 
         assertNotNull(autosysData);
 
-        var netexData = mapperService.exportPublicationDeliveryWithAutosysVehicle(autosysData.getKjoretoydataListe());
+        var netexData = mapperService.exportPublicationDeliveryWithAutosysVehicle(autosysData.getKjoretoydataListe(), null);
 
         assertNotNull(netexData);
 
