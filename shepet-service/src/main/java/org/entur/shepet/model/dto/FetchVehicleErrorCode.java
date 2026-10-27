@@ -2,5 +2,6 @@ package org.entur.shepet.model.dto;
 
 public enum FetchVehicleErrorCode {
     NOT_FOUND,
-    UPSTREAM_ERROR
+    UPSTREAM_ERROR,
+    INVALID_REGISTRATION_NUMBER
 }

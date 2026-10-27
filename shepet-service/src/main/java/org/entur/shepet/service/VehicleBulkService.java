@@ -51,23 +51,31 @@ public class VehicleBulkService {
         for (String registrationNumber : registrationNumbers) {
             try {
                 GetKjoretoyResponse autosysData = shepetService.getVehicle(registrationNumber);
-                if (autosysData.getKjoretoydataListe() != null) {
-                    allVehicleData.addAll(autosysData.getKjoretoydataListe());
+                List<Kjoretoydata> vehicles = autosysData != null ? autosysData.getKjoretoydataListe() : null;
+
+                if (vehicles == null || vehicles.isEmpty()) {
+                    // Autosys has no data for this plate: report it instead of silently dropping it
+                    logger.info("No vehicle data in Autosys for registration number {} (feilmelding: {})",
+                            registrationNumber, autosysData != null ? autosysData.getFeilmelding() : null);
+                    fetchErrors.add(new FetchVehicleErrorDto(
+                            FetchVehicleErrorCode.NOT_FOUND.name(), registrationNumber));
+                    continue;
                 }
+
+                allVehicleData.addAll(vehicles);
             } catch (Exception e) {
                 FetchVehicleErrorCode code = toErrorCode(e);
 
-                if (code == FetchVehicleErrorCode.NOT_FOUND) {
-                    logger.info("Vehicle with registration number {} not found in Autosys",
-                            registrationNumber);
-                } else {
+                if (code == FetchVehicleErrorCode.UPSTREAM_ERROR) {
                     // Full detail (status + SVV response body) stays in the log only
                     logger.warn("Failed to retrieve vehicle with registration number: {} ({})",
                             registrationNumber, code, e);
+                } else {
+                    logger.info("Vehicle with registration number {} rejected by Autosys ({})",
+                            registrationNumber, code);
                 }
 
                 fetchErrors.add(new FetchVehicleErrorDto(code.name(), registrationNumber));
-
                 // Continue with other vehicles
             }
         }
@@ -102,11 +110,17 @@ public class VehicleBulkService {
                 .toList();
     }
 
+    private static final String AUTOSYS_INVALID_FORMAT = "UGYLDIG_FORMAT_UNR_ELLER_KJENNEMERKE";
+
     private static FetchVehicleErrorCode toErrorCode(Throwable e) {
         // ShepetService wraps the RestClient exception, so walk the cause chain
         for (Throwable t = e; t != null; t = t.getCause()) {
             if (t instanceof HttpClientErrorException.NotFound) {
                 return FetchVehicleErrorCode.NOT_FOUND;
+            }
+            if (t instanceof HttpClientErrorException.BadRequest badRequest
+                    && badRequest.getResponseBodyAsString().contains(AUTOSYS_INVALID_FORMAT)) {
+                return FetchVehicleErrorCode.INVALID_REGISTRATION_NUMBER;
             }
         }
         return FetchVehicleErrorCode.UPSTREAM_ERROR;
