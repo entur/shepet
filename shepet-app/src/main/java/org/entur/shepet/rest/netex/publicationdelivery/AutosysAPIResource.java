@@ -88,6 +88,15 @@ public class AutosysAPIResource {
                     .build();
         }
 
+        if(dataOwner == null || dataOwner.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Data owner must be provided")
+                    .build();
+        }
+
+        // Autosys will accept registration numbers in uppercase without whitespace
+        vehicleBulkInputDtos.forEach(input -> input.setRegistrationNumber(MapperService.normalizeRegistrationNumber(input.getRegistrationNumber())));
+
         BulkResultDto fetchResults =
                 vehicleBulkService.fetchAndDeduplicateVehicles(vehicleBulkInputDtos);
 

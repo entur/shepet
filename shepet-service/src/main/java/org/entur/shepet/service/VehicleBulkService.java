@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,15 +35,22 @@ public class VehicleBulkService {
      * @return Tuple containing deduplicated list of vehicle data and list of fetch errors
      */
     public BulkResultDto fetchAndDeduplicateVehicles(List<VehicleBulkInputDto> vehicleInputs) {
-        logger.info("Fetching vehicle data for {} identifiers", vehicleInputs.size());
+
+        // Deduplicate on the normalized plate BEFORE calling Autosys, keeping input order
+        Set<String> registrationNumbers = vehicleInputs.stream()
+                .map(VehicleBulkInputDto::getRegistrationNumber)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        logger.info("Fetching vehicle data for {} unique registration numbers ({} inputs)",
+                registrationNumbers.size(), vehicleInputs.size());
 
         // Collect all vehicle data from Autosys
         List<Kjoretoydata> allVehicleData = new ArrayList<>();
         List<FetchVehicleErrorDto> fetchErrors = new ArrayList<>();
 
-        for (VehicleBulkInputDto vehicleInput : vehicleInputs) {
+        for (String registrationNumber : registrationNumbers) {
             try {
-                GetKjoretoyResponse autosysData = shepetService.getVehicle(vehicleInput.getRegistrationNumber());
+                GetKjoretoyResponse autosysData = shepetService.getVehicle(registrationNumber);
                 if (autosysData.getKjoretoydataListe() != null) {
                     allVehicleData.addAll(autosysData.getKjoretoydataListe());
                 }
@@ -50,14 +59,14 @@ public class VehicleBulkService {
 
                 if (code == FetchVehicleErrorCode.NOT_FOUND) {
                     logger.info("Vehicle with registration number {} not found in Autosys",
-                            vehicleInput.getRegistrationNumber());
+                            registrationNumber);
                 } else {
                     // Full detail (status + SVV response body) stays in the log only
                     logger.warn("Failed to retrieve vehicle with registration number: {} ({})",
-                            vehicleInput.getRegistrationNumber(), code, e);
+                            registrationNumber, code, e);
                 }
 
-                fetchErrors.add(new FetchVehicleErrorDto(code.name(), vehicleInput.getRegistrationNumber()));
+                fetchErrors.add(new FetchVehicleErrorDto(code.name(), registrationNumber));
 
                 // Continue with other vehicles
             }

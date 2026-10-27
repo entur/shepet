@@ -45,9 +45,6 @@ public class MapperService {
         final ResourceFrame netexResourceFrame = sobekResourceFrameExporter.createResourceFrame(dataOwner);
 
 
-        // Autosys will accept registration numbers in uppercase without whitespace
-        vehicleInputs.forEach(input -> input.setRegistrationNumber(normalizeRegistrationNumber(input.getRegistrationNumber())));
-
         logger.info("Preparing scrollable iterators");
         prepareVehicleTypes(kjoretoyList, netexResourceFrame, dataOwner);
         prepareVehicleModels(kjoretoyList,  netexResourceFrame, dataOwner);
@@ -122,10 +119,10 @@ public class MapperService {
         var efTypegodkjenning = klassifisering != null ? klassifisering.getEfTypegodkjenning() : null;
 
         if (efTypegodkjenning != null && efTypegodkjenning.getTypegodkjenningNrTekst() != null) {
-            return "AUTOSYS:VehicleModel:" + dataOwner + "_" + efTypegodkjenning.getTypegodkjenningNrTekst();
+            return "AUTOSYS:VehicleModel:" + dataOwner.replace(':', '-') + "_" + efTypegodkjenning.getTypegodkjenningNrTekst();
         }
         // Stable fallback: depends only on the vehicle itself, not on its position in the batch
-        return "AUTOSYS:VehicleModel:" + dataOwner + "_" + fallbackKey(vt);
+        return "AUTOSYS:VehicleModel:" + dataOwner.replace(':', '-') + "_" + fallbackKey(vt);
     }
 
     private String vehicleTypeId(Kjoretoydata vt, String dataOwner) {
@@ -135,10 +132,10 @@ public class MapperService {
         var efTypegodkjenning = klassifisering != null ? klassifisering.getEfTypegodkjenning() : null;
 
         if (efTypegodkjenning != null && efTypegodkjenning.getTypegodkjenningNrTekst() != null) {
-            return "AUTOSYS:VehicleType:" + dataOwner + "_" + efTypegodkjenning.getTypegodkjenningNrTekst();
+            return "AUTOSYS:VehicleType:" + dataOwner.replace(':', '-') + "_" + efTypegodkjenning.getTypegodkjenningNrTekst();
         }
         // Stable fallback: depends only on the vehicle itself, not on its position in the batch
-        return "AUTOSYS:VehicleType:" + dataOwner + "_" + fallbackKey(vt);
+        return "AUTOSYS:VehicleType:" + dataOwner.replace(':', '-') + "_" + fallbackKey(vt);
     }
 
     private String passengerCapacityId(Kjoretoydata vt, String dataOwner) {
@@ -148,10 +145,10 @@ public class MapperService {
         var efTypegodkjenning = klassifisering != null ? klassifisering.getEfTypegodkjenning() : null;
 
         if (efTypegodkjenning != null && efTypegodkjenning.getTypegodkjenningNrTekst() != null) {
-            return "AUTOSYS:PassengerCapacity:" + dataOwner + "_" + efTypegodkjenning.getTypegodkjenningNrTekst();
+            return "AUTOSYS:PassengerCapacity:" + dataOwner.replace(':', '-') + "_" + efTypegodkjenning.getTypegodkjenningNrTekst();
         }
         // Stable fallback: depends only on the vehicle itself, not on its position in the batch
-        return "AUTOSYS:PassengerCapacity:" + dataOwner + "_" + fallbackKey(vt);
+        return "AUTOSYS:PassengerCapacity:" + dataOwner.replace(':', '-') + "_" + fallbackKey(vt);
     }
     
     private String modelDescription(Kjoretoydata vt) {
@@ -193,7 +190,7 @@ public class MapperService {
         org.entur.netex2.model.Vehicle vehicle = new org.entur.netex2.model.Vehicle()
                 .withChassisNumber(kjoretoy.getKjoretoyId().getUnderstellsnummer())
                 .withRegistrationNumber(kjoretoy.getKjoretoyId().getKjennemerke())
-                .withId("AUTOSYS:Vehicle:" + dataOwner + "_" + kjoretoy.getKjoretoyId().getKjennemerke())
+                .withId("AUTOSYS:Vehicle:" + dataOwner.replace(':', '-') + "_" + kjoretoy.getKjoretoyId().getKjennemerke())
                 .withVersion("1")
                 .withTransportTypeRef(createVechicleTypeRef(kjoretoy, dataOwner))
                 .withVehicleModelRef(createModelRef(kjoretoy, dataOwner));
@@ -467,7 +464,7 @@ public class MapperService {
     }
 
     /// Make registration number to a basic form so it can be compared and sent to Autosys (remove whitespace and uppercase)
-    private static String normalizeRegistrationNumber(String registrationNumber) {
+    public static String normalizeRegistrationNumber(String registrationNumber) {
         return registrationNumber == null ? null : registrationNumber.toUpperCase().replaceAll("[\\s\\p{Z}]+", "");
     }
 
