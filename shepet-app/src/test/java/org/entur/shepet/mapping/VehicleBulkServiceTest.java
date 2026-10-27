@@ -76,10 +76,10 @@ class VehicleBulkServiceTest {
         List<VehicleBulkInputDto> inputs = List.of();
 
         ResourceFrame resourceFrame = new ResourceFrame();
-        when(sobekResourceFrameExporter.createResourceFrame(null)).thenReturn(resourceFrame);
+        when(sobekResourceFrameExporter.createResourceFrame("TEST")).thenReturn(resourceFrame);
 
         // Act
-        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, List.of(), null, inputs);
+        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, List.of(), "TEST", inputs);
 
         // Assert
         VehicleTypesInFrame_RelStructure vehicleTypes = resourceFrame.getVehicleTypes();
@@ -110,10 +110,10 @@ class VehicleBulkServiceTest {
         List<VehicleBulkInputDto> inputs = List.of();
 
         ResourceFrame resourceFrame = new ResourceFrame();
-        when(sobekResourceFrameExporter.createResourceFrame(null)).thenReturn(resourceFrame);
+        when(sobekResourceFrameExporter.createResourceFrame("TEST")).thenReturn(resourceFrame);
 
         // Act
-        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, List.of(),null, inputs);
+        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, List.of(),"TEST", inputs);
 
         // Assert
         VehicleModelsInFrame_RelStructure vehicleModels = resourceFrame.getVehicleModels();
@@ -143,10 +143,10 @@ class VehicleBulkServiceTest {
         );
 
         ResourceFrame resourceFrame = new ResourceFrame();
-        when(sobekResourceFrameExporter.createResourceFrame(null)).thenReturn(resourceFrame);
+        when(sobekResourceFrameExporter.createResourceFrame("TEST")).thenReturn(resourceFrame);
 
         // Act
-        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, List.of(),null, inputs);
+        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, List.of(),"TEST", inputs);
 
         // Assert
         VehiclesInFrame_RelStructure vehiclesInFrame = resourceFrame.getVehicles();
@@ -181,10 +181,10 @@ class VehicleBulkServiceTest {
         );
 
         ResourceFrame resourceFrame = new ResourceFrame();
-        when(sobekResourceFrameExporter.createResourceFrame(null)).thenReturn(resourceFrame);
+        when(sobekResourceFrameExporter.createResourceFrame("TEST")).thenReturn(resourceFrame);
 
         // Act
-        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, List.of(),null, inputs);
+        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, List.of(),"TEST", inputs);
 
         // Assert
         VehiclesInFrame_RelStructure vehiclesInFrame = resourceFrame.getVehicles();
@@ -202,10 +202,10 @@ class VehicleBulkServiceTest {
         List<VehicleBulkInputDto> inputs = List.of(); // No inputs with operational numbers
 
         ResourceFrame resourceFrame = new ResourceFrame();
-        when(sobekResourceFrameExporter.createResourceFrame(null)).thenReturn(resourceFrame);
+        when(sobekResourceFrameExporter.createResourceFrame("TEST")).thenReturn(resourceFrame);
 
         // Act
-        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, List.of(),null, inputs);
+        mapperService.exportPublicationDeliveryWithAutosysVehicle(vehicles, List.of(),"TEST", inputs);
 
         // Assert
         VehiclesInFrame_RelStructure vehiclesInFrame = resourceFrame.getVehicles();
