@@ -2,9 +2,7 @@ package org.entur.shepet.mapping;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.entur.shepet.mapping.util.*;
@@ -47,10 +45,13 @@ public class MapperService {
         final ResourceFrame netexResourceFrame = sobekResourceFrameExporter.createResourceFrame(dataOwner);
 
 
+        // Autosys will accept registration numbers in uppercase without whitespace
+        vehicleInputs.forEach(input -> input.setRegistrationNumber(normalizeRegistrationNumber(input.getRegistrationNumber())));
+
         logger.info("Preparing scrollable iterators");
-        prepareVehicleTypes(kjoretoyList, netexResourceFrame);
-        prepareVehicleModels(kjoretoyList,  netexResourceFrame);
-        prepareVehicles(kjoretoyList, netexResourceFrame, vehicleInputs);
+        prepareVehicleTypes(kjoretoyList, netexResourceFrame, dataOwner);
+        prepareVehicleModels(kjoretoyList,  netexResourceFrame, dataOwner);
+        prepareVehicles(kjoretoyList, netexResourceFrame, vehicleInputs, dataOwner);
         prepareFetchErrors(fetchErrors, netexResourceFrame);
 
         return publicationDeliveryCreator.createPublicationDelivery(netexResourceFrame);
@@ -64,51 +65,37 @@ public class MapperService {
 
         logger.info("Preparing fetch error key-values from {} fetch errors", fetchErrors.size());
 
-        KeyListStructure keyList = netexResourceFrame.getKeyList();
-        if (keyList == null) {
-            keyList = new KeyListStructure();
-            netexResourceFrame.setKeyList(keyList);
-        }
-
         int index = 0;
         for (FetchVehicleErrorDto fetchError : fetchErrors) {
-            // Add a key-value for the failed registration number
-            KeyValueStructure failedRegistrationNumberKeyValue = new KeyValueStructure()
-                    .withKey("fetchError-registrationNumber-" + index)
-                    .withValue(fetchError.getRegistrationNumber());
-            keyList.getKeyValue().add(failedRegistrationNumberKeyValue);
-
-            // Add a key-value for the error message
-            KeyValueStructure errorMessageKeyValue = new KeyValueStructure()
-                    .withKey("fetchError-message-" + index)
-                    .withValue(fetchError.getMessage());
-            keyList.getKeyValue().add(errorMessageKeyValue);
+            // SetToKeyValues creates the KeyList if needed and skips null values (not allowed by the XSD)
+            KeyValuesHelper.SetToKeyValues(netexResourceFrame,
+                    "fetchError-registrationNumber-" + index, fetchError.getRegistrationNumber());
+            KeyValuesHelper.SetToKeyValues(netexResourceFrame,
+                    "fetchError-message-" + index, fetchError.getMessage());
 
             index++;
         }
-    
+
         logger.info("Fetch error key-values successfully serialized to netexResourceFrame.");
     }
-    private void prepareVehicleModels(List<Kjoretoydata> kjoretoyList, org.entur.netex2.model.ResourceFrame resourceFrame) {
+    
+    private void prepareVehicleModels(List<Kjoretoydata> kjoretoyList, org.entur.netex2.model.ResourceFrame resourceFrame, String dataOwner) {
 
         if (!kjoretoyList.isEmpty()) {
             logger.info("There are vehicle models to export");
 
             VehicleModelsInFrame_RelStructure vehicleModelsInFrameRelStructure = new VehicleModelsInFrame_RelStructure();
             
-            // Deduplicate vehicle models by their ID
-            List<org.entur.netex2.model.VehicleModel> vehicleModels = kjoretoyList.stream()
-                    .collect(Collectors.toMap(
-                            vt -> vehicleModelId(vt, kjoretoyList.indexOf(vt)),
-                            vt -> new org.entur.netex2.model.VehicleModel()
-                                    .withId(vehicleModelId(vt, kjoretoyList.indexOf(vt)))
-                                    .withVersion("1")
-                                    .withDescription(createMultilingualString(modelDescription(vt))),
-                            (existing, replacement) -> existing // Keep first occurrence
-                    ))
-                    .values()
-                    .stream()
-                    .toList();
+            // Deduplicate vehicle models by their ID (stable, order-preserving)
+            Map<String, VehicleModel> modelsById = new LinkedHashMap<>();
+            for (Kjoretoydata vt : kjoretoyList) {
+                modelsById.computeIfAbsent(vehicleModelId(vt, dataOwner), id ->
+                        new org.entur.netex2.model.VehicleModel()
+                                .withId(id)
+                                .withVersion("1")
+                                .withDescription(createMultilingualString(modelDescription(vt))));
+            }
+            List<org.entur.netex2.model.VehicleModel> vehicleModels = List.copyOf(modelsById.values());
 
             logger.info("Reduced to {} unique vehicle models", vehicleModels.size());
 
@@ -128,43 +115,43 @@ public class MapperService {
                 .withValue(value));
     }
 
-    private String vehicleModelId(Kjoretoydata vt, int index) {
-        if (vt.getGodkjenning() == null) return String.format("AUTOSYS:VehicleModel:%d", index);
+    private String vehicleModelId(Kjoretoydata vt, String dataOwner) {
         var godkjenning = vt.getGodkjenning();
-        if (godkjenning.getTekniskGodkjenning() == null) return String.format("AUTOSYS:VehicleModel:%d", index);
-        var tekniskGodkjenning = godkjenning.getTekniskGodkjenning();
-        if (tekniskGodkjenning.getKjoretoyklassifisering() == null) return String.format("AUTOSYS:VehicleModel:%d", index);
-        var kjoretoyklassifisering = tekniskGodkjenning.getKjoretoyklassifisering();
-        if (kjoretoyklassifisering.getEfTypegodkjenning() == null) return String.format("AUTOSYS:VehicleModel:%d", index);
-        var efTypegodkjenning = kjoretoyklassifisering.getEfTypegodkjenning();
-        if (efTypegodkjenning.getTypegodkjenningNrTekst() == null) return String.format("AUTOSYS:VehicleModel:%d", index);
-        return String.format("AUTOSYS:VehicleModel:%s", efTypegodkjenning.getTypegodkjenningNrTekst());
+        var tekniskGodkjenning = godkjenning != null ? godkjenning.getTekniskGodkjenning() : null;
+        var klassifisering = tekniskGodkjenning != null ? tekniskGodkjenning.getKjoretoyklassifisering() : null;
+        var efTypegodkjenning = klassifisering != null ? klassifisering.getEfTypegodkjenning() : null;
+
+        if (efTypegodkjenning != null && efTypegodkjenning.getTypegodkjenningNrTekst() != null) {
+            return "AUTOSYS:VehicleModel:" + dataOwner + "_" + efTypegodkjenning.getTypegodkjenningNrTekst();
+        }
+        // Stable fallback: depends only on the vehicle itself, not on its position in the batch
+        return "AUTOSYS:VehicleModel:" + dataOwner + "_" + fallbackKey(vt);
     }
 
-    private String vehicleTypeId(Kjoretoydata vt, int index) {
-        if (vt.getGodkjenning() == null) return String.format("AUTOSYS:VehicleType:%d", index);
+    private String vehicleTypeId(Kjoretoydata vt, String dataOwner) {
         var godkjenning = vt.getGodkjenning();
-        if (godkjenning.getTekniskGodkjenning() == null) return String.format("AUTOSYS:VehicleType:%d", index);
-        var tekniskGodkjenning = godkjenning.getTekniskGodkjenning();
-        if (tekniskGodkjenning.getKjoretoyklassifisering() == null) return String.format("AUTOSYS:VehicleType:%d", index);
-        var kjoretoyklassifisering = tekniskGodkjenning.getKjoretoyklassifisering();
-        if (kjoretoyklassifisering.getEfTypegodkjenning() == null) return String.format("AUTOSYS:VehicleType:%d", index);
-        var efTypegodkjenning = kjoretoyklassifisering.getEfTypegodkjenning();
-        if (efTypegodkjenning.getTypegodkjenningNrTekst() == null) return String.format("AUTOSYS:VehicleType:%d", index);
-        return String.format("AUTOSYS:VehicleType:%s", efTypegodkjenning.getTypegodkjenningNrTekst());
+        var tekniskGodkjenning = godkjenning != null ? godkjenning.getTekniskGodkjenning() : null;
+        var klassifisering = tekniskGodkjenning != null ? tekniskGodkjenning.getKjoretoyklassifisering() : null;
+        var efTypegodkjenning = klassifisering != null ? klassifisering.getEfTypegodkjenning() : null;
+
+        if (efTypegodkjenning != null && efTypegodkjenning.getTypegodkjenningNrTekst() != null) {
+            return "AUTOSYS:VehicleType:" + dataOwner + "_" + efTypegodkjenning.getTypegodkjenningNrTekst();
+        }
+        // Stable fallback: depends only on the vehicle itself, not on its position in the batch
+        return "AUTOSYS:VehicleType:" + dataOwner + "_" + fallbackKey(vt);
     }
 
-    private String passengerCapacityId(Kjoretoydata vt, int index) {
-        if (vt.getGodkjenning() == null) return String.format("AUTOSYS:PassengerCapacity:%d", index);
+    private String passengerCapacityId(Kjoretoydata vt, String dataOwner) {
         var godkjenning = vt.getGodkjenning();
-        if (godkjenning.getTekniskGodkjenning() == null) return String.format("AUTOSYS:PassengerCapacity:%d", index);
-        var tekniskGodkjenning = godkjenning.getTekniskGodkjenning();
-        if (tekniskGodkjenning.getKjoretoyklassifisering() == null) return String.format("AUTOSYS:PassengerCapacity:%d", index);
-        var kjoretoyklassifisering = tekniskGodkjenning.getKjoretoyklassifisering();
-        if (kjoretoyklassifisering.getEfTypegodkjenning() == null) return String.format("AUTOSYS:PassengerCapacity:%d", index);
-        var efTypegodkjenning = kjoretoyklassifisering.getEfTypegodkjenning();
-        if (efTypegodkjenning.getTypegodkjenningNrTekst() == null) return String.format("AUTOSYS:PassengerCapacity:%d", index);
-        return String.format("AUTOSYS:PassengerCapacity:%s", efTypegodkjenning.getTypegodkjenningNrTekst());
+        var tekniskGodkjenning = godkjenning != null ? godkjenning.getTekniskGodkjenning() : null;
+        var klassifisering = tekniskGodkjenning != null ? tekniskGodkjenning.getKjoretoyklassifisering() : null;
+        var efTypegodkjenning = klassifisering != null ? klassifisering.getEfTypegodkjenning() : null;
+
+        if (efTypegodkjenning != null && efTypegodkjenning.getTypegodkjenningNrTekst() != null) {
+            return "AUTOSYS:PassengerCapacity:" + dataOwner + "_" + efTypegodkjenning.getTypegodkjenningNrTekst();
+        }
+        // Stable fallback: depends only on the vehicle itself, not on its position in the batch
+        return "AUTOSYS:PassengerCapacity:" + dataOwner + "_" + fallbackKey(vt);
     }
     
     private String modelDescription(Kjoretoydata vt) {
@@ -183,14 +170,14 @@ public class MapperService {
     }
 
     private void prepareVehicles(List<Kjoretoydata> kjoretoyList, org.entur.netex2.model.ResourceFrame resourceFrame,
-                                 List<VehicleBulkInputDto> vehicleInputs) {
+                                 List<VehicleBulkInputDto> vehicleInputs, String dataOwner) {
         if (!kjoretoyList.isEmpty()) {
             logger.info("There are vehicles to export");
 
             VehiclesInFrame_RelStructure vehiclesInFrame_relStructure = new VehiclesInFrame_RelStructure();
 
             List<org.entur.netex2.model.Vehicle> vehicles = kjoretoyList.stream()
-                    .map(kjoretoy -> mapOneVehicle(kjoretoy, kjoretoyList.indexOf(kjoretoy), vehicleInputs))
+                    .map(kjoretoy -> mapOneVehicle(kjoretoy, vehicleInputs, dataOwner))
                     .toList();
 
             vehiclesInFrame_relStructure.withVehicle(vehicles);
@@ -200,15 +187,16 @@ public class MapperService {
         }
     }
 
-    private org.entur.netex2.model.Vehicle mapOneVehicle(Kjoretoydata kjoretoy, int index, 
-                                                         List<VehicleBulkInputDto> vehicleInputs) {
+    private org.entur.netex2.model.Vehicle mapOneVehicle(Kjoretoydata kjoretoy,
+                                                         List<VehicleBulkInputDto> vehicleInputs,
+                                                         String dataOwner) {
         org.entur.netex2.model.Vehicle vehicle = new org.entur.netex2.model.Vehicle()
                 .withChassisNumber(kjoretoy.getKjoretoyId().getUnderstellsnummer())
                 .withRegistrationNumber(kjoretoy.getKjoretoyId().getKjennemerke())
-                .withId("AUTOSYS:Vehicle:" + kjoretoy.getKjoretoyId().getKjennemerke())
+                .withId("AUTOSYS:Vehicle:" + dataOwner + "_" + kjoretoy.getKjoretoyId().getKjennemerke())
                 .withVersion("1")
-                .withTransportTypeRef(createVechicleTypeRef(kjoretoy, index))
-                .withVehicleModelRef(createModelRef(kjoretoy, index));
+                .withTransportTypeRef(createVechicleTypeRef(kjoretoy, dataOwner))
+                .withVehicleModelRef(createModelRef(kjoretoy, dataOwner));
 
         if (kjoretoy.getRegistrering() != null && kjoretoy.getRegistrering().getFomTidspunkt() != null) {
             vehicle.withRegistrationDate(kjoretoy.getRegistrering().getFomTidspunkt()
@@ -216,7 +204,7 @@ public class MapperService {
         }
 
         // Find matching input DTO and set operational number (pick first match if multiple)
-        String registrationNumber = kjoretoy.getKjoretoyId().getKjennemerke();
+        String registrationNumber = normalizeRegistrationNumber(kjoretoy.getKjoretoyId().getKjennemerke());
         vehicleInputs.stream()
                 .filter(input -> registrationNumber.equals(input.getRegistrationNumber()))
                 .findFirst()
@@ -229,19 +217,19 @@ public class MapperService {
         return vehicle;
     }
 
-    private VehicleModelRefStructure createModelRef(Kjoretoydata vt, int index) {
+    private VehicleModelRefStructure createModelRef(Kjoretoydata vt, String dataOwner) {
         VehicleModelRefStructure vehicleModelRefStructure = new VehicleModelRefStructure();
-        vehicleModelRefStructure.setRef(vehicleModelId(vt, index));
+        vehicleModelRefStructure.setRef(vehicleModelId(vt, dataOwner));
         return vehicleModelRefStructure;
     }
 
-    private JAXBElement<? extends TransportTypeRefStructure> createVechicleTypeRef(Kjoretoydata vt, int index) {
+    private JAXBElement<? extends TransportTypeRefStructure> createVechicleTypeRef(Kjoretoydata vt, String dataOwner) {
         TransportTypeRefStructure transportTypeRefStructure = new TransportTypeRefStructure();
-        transportTypeRefStructure.setRef(vehicleTypeId(vt, index));
+        transportTypeRefStructure.setRef(vehicleTypeId(vt, dataOwner));
         return netexObjectFactory.createTransportTypeRef(transportTypeRefStructure);
     }
 
-    private void prepareVehicleTypes(List<Kjoretoydata> kjoretoyList, org.entur.netex2.model.ResourceFrame resourceFrame) {
+    private void prepareVehicleTypes(List<Kjoretoydata> kjoretoyList, org.entur.netex2.model.ResourceFrame resourceFrame, String dataOwner) {
         // Override lists with custom iterator to be able to scroll database results on the fly.
         if (!kjoretoyList.isEmpty()) {
             logger.info("There are vehicle types to export");
@@ -251,8 +239,8 @@ public class MapperService {
             // Deduplicate vehicle types by their ID
             List<org.entur.netex2.model.VehicleType> vehicleTypes = kjoretoyList.stream()
                     .collect(Collectors.toMap(
-                            vt -> vehicleTypeId(vt, kjoretoyList.indexOf(vt)),
-                            vt -> mapOneVehicleType(vt, kjoretoyList.indexOf(vt)),
+                            vt -> vehicleTypeId(vt, dataOwner),
+                            vt -> mapOneVehicleType(vt, dataOwner),
                             (existing, replacement) -> existing // Keep first occurrence
                     ))
                     .values()
@@ -269,9 +257,9 @@ public class MapperService {
         }
     }
 
-    private VehicleType mapOneVehicleType(Kjoretoydata vt, int index) {
+    private VehicleType mapOneVehicleType(Kjoretoydata vt, String dataOwner) {
         var vehicleType = new org.entur.netex2.model.VehicleType()
-                .withId(vehicleTypeId(vt, index))
+                .withId(vehicleTypeId(vt, dataOwner))
                 .withVersion("1");
 
         if (vt.getGodkjenning() == null) return vehicleType;
@@ -288,7 +276,7 @@ public class MapperService {
         var tekniskeData = tekniskGodkjenning.getTekniskeData();
 
         if(tekniskeData.getPersontall() != null) {
-            var passengerCapacityStructure = mapPassengerCapacity(vt, index, tekniskeData.getPersontall());
+            var passengerCapacityStructure = mapPassengerCapacity(vt, tekniskeData.getPersontall(), dataOwner);
             if (passengerCapacityStructure != null) vehicleType.withPassengerCapacity(passengerCapacityStructure);
         }
 
@@ -401,7 +389,7 @@ public class MapperService {
                  "M3G" ->
                     AllPublicTransportModesEnumeration.BUS;
             // Personbil	Bil for persontransport med høyst 8 sitteplasser i tillegg til førersetet (Personbil)
-            // Personbil (terreng)	Terrenggående bil for persontransport med høyst 8 sitteplasser i tillegg til førerset seat
+            // Personbil (terreng)	Terrenggående bil for persontransport med høyst 8 sitteplasser i tillegg til førersetet
             case "M1",
                  "M1G" ->
                     AllPublicTransportModesEnumeration.TAXI;  // Vi definerer personbiler som taxi, i forventning om at de personbiler som registreres i systemet blir det pga at de er taxi. Det ser ikke ut til å være noe data i Autosys som skiller ad en vanlig personbil og en taxi
@@ -409,10 +397,10 @@ public class MapperService {
         };
     }
 
-    private PassengerCapacityStructure mapPassengerCapacity(Kjoretoydata vt, int index, TekniskeData.Persontall pt) {
+    private PassengerCapacityStructure mapPassengerCapacity(Kjoretoydata vt, TekniskeData.Persontall pt, String dataOwner) {
         if(pt.getStaplasser() == null && pt.getSitteplasserTotalt() == null) return null;
         PassengerCapacityStructure passengerCapacityStructure = new PassengerCapacityStructure();
-        passengerCapacityStructure.withId(passengerCapacityId(vt, index));
+        passengerCapacityStructure.withId(passengerCapacityId(vt, dataOwner));
         passengerCapacityStructure.withVersion("1");
 
         if(pt.getSitteplasserTotalt() != null) passengerCapacityStructure.withSeatingCapacity(BigInteger.valueOf(pt.getSitteplasserTotalt()));
@@ -478,4 +466,12 @@ public class MapperService {
         };
     }
 
-}
+    /// Make registration number to a basic form so it can be compared and sent to Autosys (remove whitespace and uppercase)
+    private static String normalizeRegistrationNumber(String registrationNumber) {
+        return registrationNumber == null ? null : registrationNumber.toUpperCase().replaceAll("[\\s\\p{Z}]+", "");
+    }
+
+    private String fallbackKey(Kjoretoydata vt) {
+        var id = vt.getKjoretoyId();
+        return id != null && id.getKjennemerke() != null ? id.getKjennemerke() : "UNKNOWN";
+    }}

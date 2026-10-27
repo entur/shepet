@@ -35,13 +35,13 @@ class SobekResourceFrameExporterTest {
                     long hash = invocation.getArgument(1);
                     return "TEST:" + type + ":" + Math.abs(hash);
                 });
+        when(exportTimeZone.getDefaultTimeZoneId()).thenReturn(ZoneId.of("Europe/Oslo"));
     }
 
     @Test
     void testCreateResourceFrameWithDataOwner() {
         // Arrange
         String dataOwner = "RUT:Authority:123";
-        when(exportTimeZone.getDefaultTimeZoneId()).thenReturn(ZoneId.of("Europe/Oslo"));
 
         // Act
         ResourceFrame result = sobekResourceFrameExporter.createResourceFrame(dataOwner);
@@ -146,7 +146,6 @@ class SobekResourceFrameExporterTest {
         // Arrange
         String dataOwner = "NSB:Authority:456";
         String expectedPrefix = "TEST:ResponsibilitySet:";
-        when(exportTimeZone.getDefaultTimeZoneId()).thenReturn(ZoneId.of("Europe/Oslo"));
 
         // Act
         ResourceFrame result = sobekResourceFrameExporter.createResourceFrame(dataOwner);
@@ -169,7 +168,6 @@ class SobekResourceFrameExporterTest {
     void testMultipleCallsCreateDifferentIds() {
         // Arrange
         String dataOwner = "TEST:Authority:999";
-        when(exportTimeZone.getDefaultTimeZoneId()).thenReturn(ZoneId.of("Europe/Oslo"));
 
         // Act
         ResourceFrame frame1 = sobekResourceFrameExporter.createResourceFrame(dataOwner);
@@ -200,7 +198,6 @@ class SobekResourceFrameExporterTest {
     void testDataOwnerWithSpecialCharacters() {
         // Arrange
         String dataOwner = "SPECIAL:Authority:With-Dash_And_Underscore.123";
-        when(exportTimeZone.getDefaultTimeZoneId()).thenReturn(ZoneId.of("Europe/Oslo"));
 
         // Act
         ResourceFrame result = sobekResourceFrameExporter.createResourceFrame(dataOwner);
@@ -220,7 +217,6 @@ class SobekResourceFrameExporterTest {
     void testCompleteXmlStructureIntegrity() {
         // Arrange
         String dataOwner = "INTEGRITY:Authority:Test";
-        when(exportTimeZone.getDefaultTimeZoneId()).thenReturn(ZoneId.of("Europe/Oslo"));
 
         // Act
         ResourceFrame result = sobekResourceFrameExporter.createResourceFrame(dataOwner);

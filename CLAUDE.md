@@ -33,9 +33,9 @@ Key external deps: `org.entur:netex-java-model` (NeTEx JAXB model, SNAPSHOT), `o
 
 ## Build & test
 
-**Build with JDK 21.** Superpom enables JaCoCo 0.8.13, which can't instrument newer class files — JDK 26 (the SDKMAN default) fails with `Unsupported class file major version 70`. Use the installed 21:
+**Build with JDK 25.** Superpom enables JaCoCo 0.8.13, which can't instrument newer class files — JDK 26 (the SDKMAN default) fails with `Unsupported class file major version 70`. Use the installed 25:
 ```bash
-export JAVA_HOME=~/.sdkman/candidates/java/21.0.10-oracle
+export JAVA_HOME=/path/to/jdk-25
 ```
 
 ```bash
@@ -102,4 +102,4 @@ Code/enum translations to know:
 
 ## Conventions
 
-EUPL-1.2 license header on `shepet-app` source files. Java 21, Spring Boot, Lombok (annotation processing configured in `shepet-parent`). Generated NeTEx ids prefixed `AUTOSYS:<Type>:<key>`.
+EUPL-1.2 license header on `shepet-app` source files. Java 25, Spring Boot, Lombok (annotation processing configured in `shepet-parent`). Generated NeTEx ids prefixed `AUTOSYS:<Type>:<key>`.

@@ -3,10 +3,10 @@ API that exposes information from Statens Veivesen's Autosys as NeTEx 2.0 data
 
 ## Build & run
 
-**Build with JDK 21.** The superpom enables JaCoCo 0.8.13, which cannot instrument newer class files — building under JDK 26 fails with `Unsupported class file major version 70`.
+**Build with JDK 25.** The superpom enables JaCoCo 0.8.13, which cannot instrument newer class files — building under JDK 26 fails with `Unsupported class file major version 70`.
 
 ```bash
-export JAVA_HOME=/path/to/jdk-21
+export JAVA_HOME=/path/to/jdk-25
 mvn clean install
 ```
 

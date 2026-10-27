@@ -3,11 +3,13 @@ package org.entur.shepet.service;
 import org.entur.shepet.model.GetKjoretoyResponse;
 import org.entur.shepet.model.Kjoretoydata;
 import org.entur.shepet.model.dto.BulkResultDto;
+import org.entur.shepet.model.dto.FetchVehicleErrorCode;
 import org.entur.shepet.model.dto.FetchVehicleErrorDto;
 import org.entur.shepet.model.dto.VehicleBulkInputDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,13 +46,19 @@ public class VehicleBulkService {
                     allVehicleData.addAll(autosysData.getKjoretoydataListe());
                 }
             } catch (Exception e) {
-                logger.warn("Failed to retrieve vehicle with registration number: {}",
-                        vehicleInput.getRegistrationNumber(), e);
-                
-                // Create error DTO for this failed fetch
-                FetchVehicleErrorDto errorDto = new FetchVehicleErrorDto(e.getMessage(), vehicleInput.getRegistrationNumber());
-                fetchErrors.add(errorDto);
-                
+                FetchVehicleErrorCode code = toErrorCode(e);
+
+                if (code == FetchVehicleErrorCode.NOT_FOUND) {
+                    logger.info("Vehicle with registration number {} not found in Autosys",
+                            vehicleInput.getRegistrationNumber());
+                } else {
+                    // Full detail (status + SVV response body) stays in the log only
+                    logger.warn("Failed to retrieve vehicle with registration number: {} ({})",
+                            vehicleInput.getRegistrationNumber(), code, e);
+                }
+
+                fetchErrors.add(new FetchVehicleErrorDto(code.name(), vehicleInput.getRegistrationNumber()));
+
                 // Continue with other vehicles
             }
         }
@@ -58,9 +66,7 @@ public class VehicleBulkService {
         // Remove duplicates based on vehicle ID (kjennemerke)
         List<Kjoretoydata> uniqueVehicleData = deduplicateVehicles(allVehicleData);
 
-        logger.info("Reduced {} vehicles to {} unique vehicles", allVehicleData.size(), uniqueVehicleData.size());
-
-        logger.info("Reduced {} vehicles to {} unique vehicles with {} errors", 
+        logger.info("Reduced {} vehicles to {} unique vehicles with {} errors",
                 allVehicleData.size(), uniqueVehicleData.size(), fetchErrors.size());
 
         return new BulkResultDto(uniqueVehicleData, fetchErrors);
@@ -85,5 +91,15 @@ public class VehicleBulkService {
                 .values()
                 .stream()
                 .toList();
+    }
+
+    private static FetchVehicleErrorCode toErrorCode(Throwable e) {
+        // ShepetService wraps the RestClient exception, so walk the cause chain
+        for (Throwable t = e; t != null; t = t.getCause()) {
+            if (t instanceof HttpClientErrorException.NotFound) {
+                return FetchVehicleErrorCode.NOT_FOUND;
+            }
+        }
+        return FetchVehicleErrorCode.UPSTREAM_ERROR;
     }
 }
