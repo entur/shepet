@@ -19,8 +19,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 import jakarta.xml.bind.JAXBException;
-import org.entur.shepet.model.GetKjoretoyResponse;
-import org.entur.shepet.service.ShepetService;
+import org.entur.shepet.model.Kjoretoydata;
+import org.entur.shepet.model.dto.BulkResultDto;
+import org.entur.shepet.model.dto.FetchVehicleErrorDto;
+import org.entur.shepet.model.dto.VehicleBulkInputDto;
+import org.entur.shepet.service.VehicleBulkService;
 import org.entur.shepet.mapping.MapperService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +32,7 @@ import org.springframework.stereotype.Component;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 @Tag(name = "Sync export resource", description = "Sync export resource")
@@ -38,25 +42,69 @@ public class AutosysAPIResource {
 
     private static final Logger logger = LoggerFactory.getLogger(AutosysAPIResource.class);
 
-    private final ShepetService autosysVehicleService;
+    private final VehicleBulkService vehicleBulkService;
     private final MapperService mapperService;
     private final PublicationDeliveryStreamingOutput publicationDeliveryStreamingOutput;
 
     @Autowired
     public AutosysAPIResource(PublicationDeliveryStreamingOutput publicationDeliveryStreamingOutput,
-                              ShepetService autosysVehicleService, MapperService mapperService) {
-        this.autosysVehicleService = autosysVehicleService;
+                              VehicleBulkService vehicleBulkService,
+                              MapperService mapperService) {
+        this.vehicleBulkService = vehicleBulkService;
         this.mapperService = mapperService;
         this.publicationDeliveryStreamingOutput = publicationDeliveryStreamingOutput;
     }
 
     @GET
     @Produces(MediaType.APPLICATION_XML + "; charset=UTF-8")
-    public Response getVehicleFromAutosys(@QueryParam("registrationNumber")String registrationNumber) throws JAXBException, IOException, SAXException {
+    public Response getVehicleFromAutosys(@QueryParam("registrationNumber")String registrationNumber,
+                                          @QueryParam("dataOwner") String dataOwner) throws JAXBException, IOException, SAXException {
 
-        GetKjoretoyResponse autosysData = autosysVehicleService.getVehicle(registrationNumber);
+        return getVehiclesFromAutosys(List.of(new VehicleBulkInputDto(registrationNumber, null)), dataOwner);
+    }
 
-        var netexData = mapperService.exportPublicationDeliveryWithAutosysVehicle(autosysData.getKjoretoydataListe());
+    @POST
+    @Path("vehicles")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_XML + "; charset=UTF-8")
+    public Response getVehiclesFromAutosys(
+            List<VehicleBulkInputDto> vehicleBulkInputDtos,
+            @QueryParam("dataOwner") String dataOwner) throws JAXBException, IOException, SAXException {
+
+        logger.info("Received request for {} vehicles with dataOwner: {}",
+                vehicleBulkInputDtos != null ? vehicleBulkInputDtos.size() : 0, dataOwner);
+
+        if (vehicleBulkInputDtos == null || vehicleBulkInputDtos.isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Vehicle import list cannot be empty")
+                    .build();
+        }
+
+        if (vehicleBulkInputDtos.stream().anyMatch(input -> input == null
+                || input.getRegistrationNumber() == null
+                || input.getRegistrationNumber().isBlank())) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Each vehicle must have a non-blank registrationNumber")
+                    .build();
+        }
+
+        if(dataOwner == null || dataOwner.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Data owner must be provided")
+                    .build();
+        }
+
+        // Autosys will accept registration numbers in uppercase without whitespace
+        vehicleBulkInputDtos.forEach(input -> input.setRegistrationNumber(MapperService.normalizeRegistrationNumber(input.getRegistrationNumber())));
+
+        BulkResultDto fetchResults =
+                vehicleBulkService.fetchAndDeduplicateVehicles(vehicleBulkInputDtos);
+
+        List<Kjoretoydata> uniqueVehicleData = fetchResults.uniqueVehicles();
+        List<FetchVehicleErrorDto> fetchErrors = fetchResults.fetchErrors();
+
+        var netexData = mapperService.exportPublicationDeliveryWithAutosysVehicle(
+                uniqueVehicleData, fetchErrors, dataOwner, vehicleBulkInputDtos);
 
         return Response.ok(publicationDeliveryStreamingOutput.stream(netexData)).build();
     }

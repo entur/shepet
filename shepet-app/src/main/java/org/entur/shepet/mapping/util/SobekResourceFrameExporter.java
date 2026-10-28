@@ -15,8 +15,9 @@
 
 package org.entur.shepet.mapping.util;
 
-import org.entur.netex2.model.ResourceFrame;
+import org.entur.netex2.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 
@@ -24,18 +25,55 @@ import org.springframework.stereotype.Service;
 public class SobekResourceFrameExporter {
 
     private final NetexIdHelper netexIdHelper;
+    private final String defaultLanguage;
+    private final ExportTimeZone exportTimeZone;
 
     @Autowired
-    public SobekResourceFrameExporter(NetexIdHelper netexIdHelper) {
+    public SobekResourceFrameExporter(NetexIdHelper netexIdHelper,
+                                      @Value("${sobek.locals.language.default:nor}") String defaultLanguage,
+                                      ExportTimeZone exportTimeZone) {
 
         this.netexIdHelper = netexIdHelper;
+        this.defaultLanguage = defaultLanguage;
+        this.exportTimeZone = exportTimeZone;
     }
 
 
-    public ResourceFrame createResourceFrame(){
+    public ResourceFrame createResourceFrame(String dataOwner){
         ResourceFrame resourceFrame = new ResourceFrame();
         resourceFrame.setVersion("1");
         resourceFrame.setId(netexIdHelper.getNetexId("ResourceFrame",resourceFrame.hashCode()));
+
+        String responsibilitySetId = null;
+
+        if(dataOwner != null && !dataOwner.isEmpty()) {
+            responsibilitySetId = netexIdHelper.getNetexId("ResponsibilitySet", resourceFrame.hashCode());
+            resourceFrame.withResponsibilitySets(
+                    new ResponsibilitySetsInFrame_RelStructure().withResponsibilitySet(
+                            new ResponsibilitySet().withId(responsibilitySetId)
+                                    .withVersion("1")
+                                    .withRoles(
+                                            new ResponsibilityRoleAssignments_RelStructure().withResponsibilityRoleAssignment(
+                                                    new ResponsibilityRoleAssignment().withDataRoleType(DataRoleTypeEnumeration.OWNS)
+                                                            .withId(netexIdHelper.getNetexId("ResponsibilityRoleAssignment", resourceFrame.hashCode()))
+                                                            .withVersion("1")
+                                                            .withResponsibleOrganisationRef(new OrganisationRefStructure().withRef(dataOwner))
+                                            )
+                                    )));
+        }
+
+        VersionFrameDefaultsStructure frameDefaults =
+                new VersionFrameDefaultsStructure()
+                        .withDefaultLocale(new LocaleStructure()
+                                .withDefaultLanguage(defaultLanguage)
+                                .withTimeZone(exportTimeZone.getDefaultTimeZoneId().toString()));
+
+        if(responsibilitySetId != null) {
+            frameDefaults.withDefaultResponsibilitySetRef(
+                        new ResponsibilitySetRefStructure().withRef(responsibilitySetId));
+        }
+
+        resourceFrame.withFrameDefaults(frameDefaults);
 
         return resourceFrame;
     }
