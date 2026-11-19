@@ -284,9 +284,17 @@ public class MapperService {
 
         var dimensjoner = tekniskeData.getDimensjoner();
         if(dimensjoner != null) {
-            if(dimensjoner.getBredde() != null) vehicleType.withWidth(BigDecimal.valueOf(dimensjoner.getBredde()));
-            if(dimensjoner.getLengde() != null) vehicleType.withLength(BigDecimal.valueOf(dimensjoner.getLengde()));
-            if(dimensjoner.getHoyde() != null) vehicleType.withHeight(BigDecimal.valueOf(dimensjoner.getHoyde()));
+            if(dimensjoner.getBredde() != null) vehicleType.withWidth(mmToMeters(dimensjoner.getBredde()));
+            if(dimensjoner.getLengde() != null) vehicleType.withLength(mmToMeters(dimensjoner.getLengde()));
+            if(dimensjoner.getHoyde() != null) vehicleType.withHeight(mmToMeters(dimensjoner.getHoyde()));
+        }
+
+        var generelt = tekniskeData.getGenerelt();
+        if(generelt != null) {
+            var handelsbetegnelse = generelt.getHandelsbetegnelse();
+            if(handelsbetegnelse != null && !handelsbetegnelse.isEmpty()) {
+                vehicleType.withName(new MultilingualString().withContent(handelsbetegnelse.getFirst()));
+            }
         }
 
         var miljoData = tekniskeData.getMiljodata();
@@ -331,6 +339,10 @@ public class MapperService {
         }
 
         return vehicleType;
+    }
+
+    private static BigDecimal mmToMeters(Integer mm) {
+        return mm == null ? null : BigDecimal.valueOf(mm).divide(BigDecimal.valueOf(1000));
     }
 
     private String mapEuroClass(Kode euroKode) {
