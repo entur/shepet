@@ -1,5 +1,6 @@
 package org.entur.shepet.mapping;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.FileOutputStream;
@@ -55,6 +56,27 @@ public class MapperServiceTest {
 
         write2File(netexData, "target/eh84771.xml");
 
+    }
+
+    @Test
+    void navnFraMerkeOgHandelsbetegnelse_returnsHandelsbetegnelse_whenItAlreadyContainsMerke() {
+        String result = MapperService.navnFraMerkeOgHandelsbetegnelse("NISSAN", "Nissan Leaf 40kw");
+
+        assertEquals("Nissan Leaf 40kw", result);
+    }
+
+    @Test
+    void navnFraMerkeOgHandelsbetegnelse_returnsMerke_whenHandelsbetegnelseIsNull() {
+        String result = MapperService.navnFraMerkeOgHandelsbetegnelse("NISSAN", "Leaf 40kw");
+
+        assertEquals("NISSAN Leaf 40kw", result);
+    }
+
+    @Test
+    void navnFraMerkeOgHandelsbetegnelse_isCaseInsensitiveWhenComparingMerke() {
+        String result = MapperService.navnFraMerkeOgHandelsbetegnelse("nissan", "NISSAN LEAF 40KW");
+
+        assertEquals("NISSAN LEAF 40KW", result);
     }
 
     private void write2File(PublicationDeliveryStructure netexData, String filePath) throws WebApplicationException, IOException, JAXBException, SAXException {

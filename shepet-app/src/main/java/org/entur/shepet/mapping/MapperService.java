@@ -290,11 +290,22 @@ public class MapperService {
         }
 
         var generelt = tekniskeData.getGenerelt();
+        String merkeNavn = null;
+        String handelsbetegnelseNavn = null;
         if(generelt != null) {
+            if(generelt.getMerke() != null && !generelt.getMerke().isEmpty()) {
+                var merke = generelt.getMerke().getFirst();
+                if(merke.getMerke() != null && !merke.getMerke().isEmpty()) {
+                    merkeNavn = merke.getMerke();
+                }
+            }
             var handelsbetegnelse = generelt.getHandelsbetegnelse();
             if(handelsbetegnelse != null && !handelsbetegnelse.isEmpty()) {
-                vehicleType.withName(new MultilingualString().withContent(handelsbetegnelse.getFirst()));
+                handelsbetegnelseNavn = handelsbetegnelse.getFirst();
             }
+        }
+        if (merkeNavn != null || handelsbetegnelseNavn != null)  {
+            vehicleType.withName(new MultilingualString().withContent(navnFraMerkeOgHandelsbetegnelse(merkeNavn, handelsbetegnelseNavn)));
         }
 
         var miljoData = tekniskeData.getMiljodata();
@@ -343,6 +354,24 @@ public class MapperService {
 
     private static BigDecimal mmToMeters(Integer mm) {
         return mm == null ? null : BigDecimal.valueOf(mm).divide(BigDecimal.valueOf(1000));
+    }
+
+    static String navnFraMerkeOgHandelsbetegnelse(String merke, String handelsbetegnelse) {
+        if(merke != null && !merke.isBlank()) {
+            if(handelsbetegnelse != null && !handelsbetegnelse.isBlank()) {
+                if(handelsbetegnelse.toLowerCase(Locale.ROOT).contains(merke.toLowerCase(Locale.ROOT))) {
+                    return handelsbetegnelse;
+                } else {
+                    return merke + " " + handelsbetegnelse;
+                }
+            } else {
+                return merke;
+            }
+        } else if(handelsbetegnelse != null && !handelsbetegnelse.isBlank()) {
+            return handelsbetegnelse;
+        } else {
+            return null;
+        }
     }
 
     private String mapEuroClass(Kode euroKode) {
