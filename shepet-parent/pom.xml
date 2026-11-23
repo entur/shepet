@@ -42,7 +42,7 @@
         <!-- Dependency versions -->
         <slf4j.version>2.0.20</slf4j.version>
         <lombok.version>1.18.48</lombok.version>
-        <swagger-jersey2.version>2.2.55</swagger-jersey2.version>
+        <swagger-jersey2.version>2.2.56</swagger-jersey2.version>
     </properties>
 
     <repositories>
