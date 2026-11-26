@@ -87,10 +87,8 @@ public class MapperService {
             Map<String, VehicleModel> modelsById = new LinkedHashMap<>();
             for (Kjoretoydata vt : kjoretoyList) {
                 modelsById.computeIfAbsent(vehicleModelId(vt, dataOwner), id ->
-                        new org.entur.netex2.model.VehicleModel()
-                                .withId(id)
-                                .withVersion("1")
-                                .withDescription(createMultilingualString(modelDescription(vt))));
+                        mapOneVehicleModel(vt, dataOwner)
+                );
             }
             List<org.entur.netex2.model.VehicleModel> vehicleModels = List.copyOf(modelsById.values());
 
@@ -104,12 +102,7 @@ public class MapperService {
     }
 
     private MultilingualString createMultilingualString(String value) {
-        return new MultilingualString().withContent(List.of(createTextType(value)));
-    }
-
-    private JAXBElement<? extends TextType> createTextType(String value){
-        return netexObjectFactory.createMultilingualStringText(new TextType()
-                .withValue(value));
+        return new MultilingualString().withContent(value);
     }
 
     private String vehicleModelId(Kjoretoydata vt, String dataOwner) {
@@ -305,7 +298,7 @@ public class MapperService {
             }
         }
         if (merkeNavn != null || handelsbetegnelseNavn != null)  {
-            vehicleType.withName(new MultilingualString().withContent(navnFraMerkeOgHandelsbetegnelse(merkeNavn, handelsbetegnelseNavn)));
+            vehicleType.withName(createMultilingualString(navnFraMerkeOgHandelsbetegnelse(merkeNavn, handelsbetegnelseNavn)));
         }
 
         var miljoData = tekniskeData.getMiljodata();
@@ -349,7 +342,46 @@ public class MapperService {
             vehicleType.withLowFloor(isLowFloor(tekniskeData.getKarosseriOgLasteplan().getKarosseritype()));
         }
 
+        vehicleType.withClassifiedAsRef(createModelRef(vt, dataOwner));
+
         return vehicleType;
+    }
+
+    private VehicleModel mapOneVehicleModel(Kjoretoydata vt, String dataOwner) {
+        var vehicleModel = new org.entur.netex2.model.VehicleModel()
+                .withId(vehicleModelId(vt, dataOwner))
+                .withVersion("1")
+                .withDescription(createMultilingualString(modelDescription(vt)));
+
+        if (vt.getGodkjenning() == null) return vehicleModel;
+        var godkjenning = vt.getGodkjenning();
+        if (godkjenning.getTekniskGodkjenning() == null) return vehicleModel;
+        var tekniskGodkjenning = godkjenning.getTekniskGodkjenning();
+        if(tekniskGodkjenning.getKjoretoyklassifisering() == null) return vehicleModel;
+        var kjoretoyKlassifisering = tekniskGodkjenning.getKjoretoyklassifisering();
+        if(kjoretoyKlassifisering.getTekniskKode() == null) return vehicleModel;
+
+        if (tekniskGodkjenning.getTekniskeData() == null) return vehicleModel;
+        var tekniskeData = tekniskGodkjenning.getTekniskeData();
+
+        var generelt = tekniskeData.getGenerelt();
+        String merkeNavn = null;
+        if(generelt != null) {
+            if(generelt.getMerke() != null && !generelt.getMerke().isEmpty()) {
+                var merke = generelt.getMerke().getFirst();
+                if(merke.getMerke() != null && !merke.getMerke().isEmpty()) {
+                    merkeNavn = merke.getMerke();
+                }
+            }
+            var fabrikant = generelt.getFabrikant();
+            if(fabrikant != null && !fabrikant.isEmpty()) {
+                vehicleModel.withManufacturer(createMultilingualString(fabrikant.getFirst().getFabrikantNavn()));
+            } else if (merkeNavn != null) {
+                vehicleModel.withManufacturer(createMultilingualString(merkeNavn));
+            }
+        }
+
+        return vehicleModel;
     }
 
     private static BigDecimal mmToMeters(Integer mm) {
