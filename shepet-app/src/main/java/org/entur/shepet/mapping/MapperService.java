@@ -370,8 +370,10 @@ public class MapperService {
                 }
             }
             var fabrikant = generelt.getFabrikant();
-            if(fabrikant != null && !fabrikant.isEmpty()) {
-                vehicleModel.withManufacturer(createMultilingualString(fabrikant.getFirst().getFabrikantNavn()));
+            var fabrikantNavn = fabrikant != null && !fabrikant.isEmpty() && fabrikant.getFirst() != null
+                    ? fabrikant.getFirst().getFabrikantNavn() : null;
+            if (fabrikantNavn != null && !fabrikantNavn.isBlank()) {
+                vehicleModel.withManufacturer(createMultilingualString(fabrikantNavn));
             } else if (merkeNavn != null) {
                 vehicleModel.withManufacturer(createMultilingualString(merkeNavn));
             }
