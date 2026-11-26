@@ -357,10 +357,6 @@ public class MapperService {
         var godkjenning = vt.getGodkjenning();
         if (godkjenning.getTekniskGodkjenning() == null) return vehicleModel;
         var tekniskGodkjenning = godkjenning.getTekniskGodkjenning();
-        if(tekniskGodkjenning.getKjoretoyklassifisering() == null) return vehicleModel;
-        var kjoretoyKlassifisering = tekniskGodkjenning.getKjoretoyklassifisering();
-        if(kjoretoyKlassifisering.getTekniskKode() == null) return vehicleModel;
-
         if (tekniskGodkjenning.getTekniskeData() == null) return vehicleModel;
         var tekniskeData = tekniskGodkjenning.getTekniskeData();
 
