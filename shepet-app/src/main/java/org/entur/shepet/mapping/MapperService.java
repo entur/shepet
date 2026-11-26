@@ -87,10 +87,8 @@ public class MapperService {
             Map<String, VehicleModel> modelsById = new LinkedHashMap<>();
             for (Kjoretoydata vt : kjoretoyList) {
                 modelsById.computeIfAbsent(vehicleModelId(vt, dataOwner), id ->
-                        new org.entur.netex2.model.VehicleModel()
-                                .withId(id)
-                                .withVersion("1")
-                                .withDescription(createMultilingualString(modelDescription(vt))));
+                        mapOneVehicleModel(vt, dataOwner)
+                );
             }
             List<org.entur.netex2.model.VehicleModel> vehicleModels = List.copyOf(modelsById.values());
 
@@ -104,12 +102,7 @@ public class MapperService {
     }
 
     private MultilingualString createMultilingualString(String value) {
-        return new MultilingualString().withContent(List.of(createTextType(value)));
-    }
-
-    private JAXBElement<? extends TextType> createTextType(String value){
-        return netexObjectFactory.createMultilingualStringText(new TextType()
-                .withValue(value));
+        return new MultilingualString().withContent(value);
     }
 
     private String vehicleModelId(Kjoretoydata vt, String dataOwner) {
@@ -259,6 +252,8 @@ public class MapperService {
                 .withId(vehicleTypeId(vt, dataOwner))
                 .withVersion("1");
 
+        vehicleType.withClassifiedAsRef(createModelRef(vt, dataOwner));
+
         if (vt.getGodkjenning() == null) return vehicleType;
         var godkjenning = vt.getGodkjenning();
         if (godkjenning.getTekniskGodkjenning() == null) return vehicleType;
@@ -305,7 +300,7 @@ public class MapperService {
             }
         }
         if (merkeNavn != null || handelsbetegnelseNavn != null)  {
-            vehicleType.withName(new MultilingualString().withContent(navnFraMerkeOgHandelsbetegnelse(merkeNavn, handelsbetegnelseNavn)));
+            vehicleType.withName(createMultilingualString(navnFraMerkeOgHandelsbetegnelse(merkeNavn, handelsbetegnelseNavn)));
         }
 
         var miljoData = tekniskeData.getMiljodata();
@@ -350,6 +345,41 @@ public class MapperService {
         }
 
         return vehicleType;
+    }
+
+    private VehicleModel mapOneVehicleModel(Kjoretoydata vt, String dataOwner) {
+        var vehicleModel = new org.entur.netex2.model.VehicleModel()
+                .withId(vehicleModelId(vt, dataOwner))
+                .withVersion("1")
+                .withDescription(createMultilingualString(modelDescription(vt)));
+
+        if (vt.getGodkjenning() == null) return vehicleModel;
+        var godkjenning = vt.getGodkjenning();
+        if (godkjenning.getTekniskGodkjenning() == null) return vehicleModel;
+        var tekniskGodkjenning = godkjenning.getTekniskGodkjenning();
+        if (tekniskGodkjenning.getTekniskeData() == null) return vehicleModel;
+        var tekniskeData = tekniskGodkjenning.getTekniskeData();
+
+        var generelt = tekniskeData.getGenerelt();
+        String merkeNavn = null;
+        if(generelt != null) {
+            if(generelt.getMerke() != null && !generelt.getMerke().isEmpty()) {
+                var merke = generelt.getMerke().getFirst();
+                if(merke.getMerke() != null && !merke.getMerke().isEmpty()) {
+                    merkeNavn = merke.getMerke();
+                }
+            }
+            var fabrikant = generelt.getFabrikant();
+            var fabrikantNavn = fabrikant != null && !fabrikant.isEmpty() && fabrikant.getFirst() != null
+                    ? fabrikant.getFirst().getFabrikantNavn() : null;
+            if (fabrikantNavn != null && !fabrikantNavn.isBlank()) {
+                vehicleModel.withManufacturer(createMultilingualString(fabrikantNavn));
+            } else if (merkeNavn != null) {
+                vehicleModel.withManufacturer(createMultilingualString(merkeNavn));
+            }
+        }
+
+        return vehicleModel;
     }
 
     private static BigDecimal mmToMeters(Integer mm) {
