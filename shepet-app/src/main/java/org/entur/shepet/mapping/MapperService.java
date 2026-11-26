@@ -252,6 +252,8 @@ public class MapperService {
                 .withId(vehicleTypeId(vt, dataOwner))
                 .withVersion("1");
 
+        vehicleType.withClassifiedAsRef(createModelRef(vt, dataOwner));
+
         if (vt.getGodkjenning() == null) return vehicleType;
         var godkjenning = vt.getGodkjenning();
         if (godkjenning.getTekniskGodkjenning() == null) return vehicleType;
@@ -341,8 +343,6 @@ public class MapperService {
         if (tekniskeData.getKarosseriOgLasteplan() != null && tekniskeData.getKarosseriOgLasteplan().getKarosseritype() != null) {
             vehicleType.withLowFloor(isLowFloor(tekniskeData.getKarosseriOgLasteplan().getKarosseritype()));
         }
-
-        vehicleType.withClassifiedAsRef(createModelRef(vt, dataOwner));
 
         return vehicleType;
     }
